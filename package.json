@@ -1,0 +1,17 @@
+{
+  "name": "muta",
+  "version": "0.0.0",
+  "description": "Transactions for object mutations",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "proxy",
+    "mutation",
+    "state",
+    "commit"
+  ],
+  "author": "Matt Bell <mappum@gmail.com>",
+  "license": "MIT"
+}
