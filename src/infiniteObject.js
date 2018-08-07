@@ -1,5 +1,14 @@
 'use strict'
 
+// all unset properties are resolved as a recursive
+// infiniteObject. only recursive objects which have
+// properties set on them will persist, e.g.:
+//
+// let obj = infiniteObject()
+// obj.foo.bar.baz = 123
+// // obj is { foo: { bar: { baz: 123 } } }
+// delete obj.foo.bar.baz
+// // obj is {}
 function infiniteObject (parent, selfKey) {
   let state = {}
   let nKeys = 0

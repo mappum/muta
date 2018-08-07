@@ -5,6 +5,11 @@ const infiniteObject = require('./infiniteObject.js')
 const ASSIGN = Symbol('assign')
 const DELETE = Symbol('delete')
 
+// VirtualObject represents a wrapper over some target data,
+// which when mutated will only mutate a "patch" object, and
+// can be accessed as if the mutations were made to the original
+// data. The patch changes can be flushed/committed to the target
+// data later.
 class VirtualObject {
   constructor (target, patch = infiniteObject()) {
     this.target = target
@@ -101,6 +106,10 @@ class VirtualObject {
 }
 
 module.exports = VirtualObject
+Object.assign(module.exports, {
+  ASSIGN,
+  DELETE
+})
 
 function wrap (target, patch) {
   if (!isWrappable(target)) {
@@ -113,7 +122,7 @@ function wrap (target, patch) {
 }
 
 function isWrappable (value) {
-  return (value != null) &&
-    (typeof value === 'object') ||
-    (typeof value === 'function')
+  if (value == null) return false
+  return typeof value === 'object' ||
+    typeof value === 'function'
 }
