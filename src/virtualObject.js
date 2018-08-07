@@ -4,12 +4,13 @@ const infiniteObject = require('./infiniteObject.js')
 
 const ASSIGN = Symbol('assign')
 const DELETE = Symbol('delete')
+const PATCH = Symbol('muta patch')
 
 // VirtualObject represents a wrapper over some target data,
 // which when mutated will only mutate a "patch" object, and
 // can be accessed as if the mutations were made to the original
 // data. The patch changes can be flushed/committed to the target
-// data later.
+// data later, or thrown away.
 class VirtualObject {
   constructor (target, patch = infiniteObject()) {
     this.target = target
@@ -21,6 +22,11 @@ class VirtualObject {
   }
 
   get (target, key) {
+    // lets us unwrap by accessing the PATCH symbol key
+    if (key === PATCH) {
+      return this
+    }
+
     // key is assigned to, resolve with virtual value as target
     if (this.assignsTo(key)) {
       let childPatch = this.patch[ASSIGN][key]
@@ -108,7 +114,8 @@ class VirtualObject {
 module.exports = VirtualObject
 Object.assign(module.exports, {
   ASSIGN,
-  DELETE
+  DELETE,
+  PATCH
 })
 
 function wrap (target, patch) {
