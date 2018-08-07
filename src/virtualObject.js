@@ -109,6 +109,28 @@ class VirtualObject {
     return DELETE in this.patch &&
       key in this.patch[DELETE]
   }
+
+  commit () {
+    // assign
+    if (ASSIGN in this.patch) {
+      Object.assign(this.target, this.patch[ASSIGN])
+      delete this.patch[ASSIGN]
+    }
+
+    // delete
+    if (DELETE in this.patch) {
+      for (let key in this.patch[DELETE]) {
+        delete this.target[key]
+      }
+      delete this.patch[DELETE]
+    }
+
+    // recurse
+    for (let key in this.patch) {
+      let child = new VirtualObject(this.target[key], this.patch[key])
+      child.commit()
+    }
+  }
 }
 
 module.exports = VirtualObject
@@ -124,8 +146,8 @@ function wrap (target, patch) {
   }
 
   // TODO: use VirtualArray for arrays
-  let wrapper = new VirtualObject(target, patch)
-  return wrapper.wrapper()
+  let virtual = new VirtualObject(target, patch)
+  return virtual.wrapper()
 }
 
 function isWrappable (value) {
