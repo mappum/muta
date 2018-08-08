@@ -1,10 +1,10 @@
 # muta
 
-Virtually mutate data without cloning
+Mutate an object without affecting the original, and without cloning
 
-This package lets you wrap an object and make mutations to it, while only keeping in memory the unmodified original object and the mutation "patch". The wrapper can be accessed as if the mutations had made to the original object, and the mutations can be eventually committed to the original object if desired.
+`muta` lets you wrap an object and make mutations to it, while only keeping in memory the unmodified original object and the mutation "patch". The wrapper can be accessed as if the mutations had made to the original object, and the mutations can be eventually committed to the original object if desired.
 
-It provides similar functionality to the [`jsondiffpatch`](https://github.com/benjamine/jsondiffpatch) module, although `muta` is more efficient for large objects since we build the patch as the data is mutated rather than diffing by iterating through all the keys.
+This module provides similar functionality to the [`jsondiffpatch`](https://github.com/benjamine/jsondiffpatch) module, although it is more efficient for large objects since we build the patch as the data is mutated rather than cloning and diffing by iterating through all the keys.
 
 ## Usage
 `npm install muta`
@@ -22,7 +22,7 @@ console.log(originalData) // { foo: { bar: 123 } }
 console.log(virtualData) // { foo: { bar: 124 } }
 
 // if you want to apply the changes,
-// call muta.commit on the muta wrapper
+// call muta.commit on the wrapper
 muta.commit(virtualData)
 console.log(originalData) // { foo: { bar: 124 } }
 ```
