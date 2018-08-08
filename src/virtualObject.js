@@ -132,9 +132,10 @@ class VirtualObject {
     if (ASSIGN in this.patch) {
       if (key in this.patch[ASSIGN]) {
         return {
+          value: this.patch[ASSIGN][key],
+          writable: true,
           configurable: true,
-          enumerable: typeof key !== 'symbol',
-          value: this.patch[ASSIGN][key]
+          enumerable: true
         }
       }
     }
