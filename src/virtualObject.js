@@ -98,6 +98,53 @@ class VirtualObject {
     return true
   }
 
+  ownKeys (target) {
+    if (target === this.patch) {
+      return Reflect.ownKeys(target)
+    }
+
+    // get target keys
+    let keys = getKeys(target)
+
+    // filter out deleted keys
+    if (DELETE in this.patch) {
+      keys = keys.filter((key) => {
+        return !(key in this.patch[DELETE])
+      })
+    }
+
+    // add newly assigned keys
+    if (ASSIGN in this.patch) {
+      let assignedKeys = getKeys(this.patch[ASSIGN])
+      for (let key of assignedKeys) {
+        if (key in target) continue
+        keys.push(key)
+      }
+    }
+
+    return keys
+  }
+
+  getOwnPropertyDescriptor (target, key) {
+    if (DELETE in this.patch) {
+      if (key in this.patch[DELETE]) {
+        return undefined
+      }
+    }
+
+    if (ASSIGN in this.patch) {
+      if (key in this.patch[ASSIGN]) {
+        return {
+          configurable: true,
+          enumerable: typeof key !== 'symbol',
+          value: this.patch[ASSIGN][key]
+        }
+      }
+    }
+
+    return Reflect.getOwnPropertyDescriptor(target, key)
+  }
+
   assignsTo (key) {
     return ASSIGN in this.patch &&
       key in this.patch[ASSIGN]
@@ -152,4 +199,11 @@ function isWrappable (value) {
   if (value == null) return false
   return typeof value === 'object' ||
     typeof value === 'function'
+}
+
+function getKeys (object) {
+  return [].concat(
+    Object.getOwnPropertyNames(object),
+    Object.getOwnPropertySymbols(object)
+  )
 }

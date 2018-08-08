@@ -1,5 +1,6 @@
 'use strict'
 
+const { inspect } = require('util')
 const test = require('tape')
 const VirtualObject = require('../src/virtualObject.js')
 const { ASSIGN, DELETE } = VirtualObject
@@ -15,7 +16,7 @@ test('VirtualObject', (t) => {
   t.test('get wrapper', (t) => {
     let target = { foo: 123 }
     let obj = new VirtualObject(target)
-    let wrapper = obj.wrapper()
+    let wrapper = obj.wrapper
     t.false(wrapper instanceof VirtualObject)
     t.equals(typeof wrapper, 'object')
     t.equals(Object.keys(wrapper).length, 1)
@@ -25,7 +26,7 @@ test('VirtualObject', (t) => {
   t.test('get root target property', (t) => {
     let target = { foo: 123 }
     let obj = new VirtualObject(target)
-    let wrapper = obj.wrapper()
+    let wrapper = obj.wrapper
     t.equals(wrapper.foo, 123)
     t.end()
   })
@@ -33,7 +34,7 @@ test('VirtualObject', (t) => {
   t.test('get child target property', (t) => {
     let target = { foo: { bar: 123 } }
     let obj = new VirtualObject(target)
-    let wrapper = obj.wrapper()
+    let wrapper = obj.wrapper
     t.equals(wrapper.foo.bar, 123)
     t.deepEquals(wrapper.foo, { bar: 123 })
     t.end()
@@ -42,7 +43,7 @@ test('VirtualObject', (t) => {
   t.test('get root assigned property', (t) => {
     let target = { foo: 123 }
     let obj = new VirtualObject(target)
-    let wrapper = obj.wrapper()
+    let wrapper = obj.wrapper
     wrapper.foo += 1
     t.equals(wrapper.foo, 124)
     t.equals(target.foo, 123)
@@ -52,7 +53,7 @@ test('VirtualObject', (t) => {
   t.test('get child assigned property', (t) => {
     let target = { foo: { bar: 123 } }
     let obj = new VirtualObject(target)
-    let wrapper = obj.wrapper()
+    let wrapper = obj.wrapper
     wrapper.foo.bar += 1
     t.equals(wrapper.foo.bar, 124)
     t.equals(target.foo.bar, 123)
@@ -62,7 +63,7 @@ test('VirtualObject', (t) => {
   t.test('get root deleted property', (t) => {
     let target = { foo: 123 }
     let obj = new VirtualObject(target)
-    let wrapper = obj.wrapper()
+    let wrapper = obj.wrapper
     delete wrapper.foo
     t.false('foo' in wrapper)
     t.equals(wrapper.foo, undefined)
@@ -74,7 +75,7 @@ test('VirtualObject', (t) => {
   t.test('get child deleted property', (t) => {
     let target = { foo: { bar: 123 } }
     let obj = new VirtualObject(target)
-    let wrapper = obj.wrapper()
+    let wrapper = obj.wrapper
     delete wrapper.foo.bar
     t.false('bar' in wrapper.foo)
     t.equals(wrapper.foo.bar, undefined)
@@ -86,7 +87,7 @@ test('VirtualObject', (t) => {
   t.test('get root added property', (t) => {
     let target = { foo: 123 }
     let obj = new VirtualObject(target)
-    let wrapper = obj.wrapper()
+    let wrapper = obj.wrapper
     wrapper.bar = 456
     t.true('foo' in wrapper)
     t.true('bar' in wrapper)
@@ -102,7 +103,7 @@ test('VirtualObject', (t) => {
   t.test('get child added property', (t) => {
     let target = { foo: { bar: 123 } }
     let obj = new VirtualObject(target)
-    let wrapper = obj.wrapper()
+    let wrapper = obj.wrapper
     wrapper.foo.baz = 456
     t.true('bar' in wrapper.foo)
     t.true('baz' in wrapper.foo)
@@ -118,10 +119,30 @@ test('VirtualObject', (t) => {
   t.test('delete child added property', (t) => {
     let target = { foo: { bar: 123 } }
     let obj = new VirtualObject(target)
-    let wrapper = obj.wrapper()
+    let wrapper = obj.wrapper
     wrapper.foo = { bar: 123 }
     delete wrapper.foo.bar
     t.false('bar' in wrapper.foo)
+    t.end()
+  })
+
+  t.test('keys', (t) => {
+    let s1 = Symbol('1')
+    let s2 = Symbol('2')
+    let target = { foo: 123, foo2: 4, [s1]: 456 }
+    let obj = new VirtualObject(target)
+    let wrapper = obj.wrapper
+    wrapper.bar = true
+    wrapper[s2] = true
+    delete wrapper.foo2
+    let names = Object.getOwnPropertyNames(wrapper)
+    t.deepEquals(names, [ 'foo', 'bar' ])
+    let symbols = Object.getOwnPropertySymbols(wrapper)
+    t.deepEquals(symbols, [ s1, s2 ])
+    let keys = Object.keys(wrapper)
+    t.deepEquals(keys, [ 'foo', 'bar' ])
+    let inspected = inspect(wrapper)
+    t.equals(inspected, '{ foo: 123, bar: true, [Symbol(1)]: 456 }')
     t.end()
   })
 
@@ -129,7 +150,7 @@ test('VirtualObject', (t) => {
     let target = { foo: { bar: 123 } }
     let oldFoo = target.foo
     let obj = new VirtualObject(target)
-    let wrapper = obj.wrapper()
+    let wrapper = obj.wrapper
     delete wrapper.foo.bar
     wrapper.foo2 = { bar: 456 }
     wrapper.x = 5
@@ -151,7 +172,7 @@ test('VirtualObject', (t) => {
     }
     let originalBar = target.bar
     let obj = new VirtualObject(target)
-    let wrapper = obj.wrapper()
+    let wrapper = obj.wrapper
 
     // XXX hack to convert symbols to strings, since tape doesn't
     // support symbols in deepEquals
