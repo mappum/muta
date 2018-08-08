@@ -4,7 +4,7 @@
   "description": "Transactions for object mutations",
   "main": "index.js",
   "scripts": {
-    "test": "depcheck && standard src/*.js test/*.js && nyc tape test/*.js | faucet && nyc report"
+    "test": "depcheck && standard src/*.js test/*.js && nyc -r text -r html tape test/*.js | faucet && nyc report"
   },
   "keywords": [
     "proxy",
