@@ -40,7 +40,7 @@ function infiniteObject (parent, selfKey) {
     },
 
     deleteProperty (target, key) {
-      if (!(key in target)) return
+      if (!(key in target)) return true
 
       nKeys -= 1
       if (parent != null && nKeys === 0) {
