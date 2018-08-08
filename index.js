@@ -5,7 +5,7 @@ const { ASSIGN, DELETE } = VirtualObject
 
 module.exports = function muta (target) {
   let patch = new VirtualObject(target)
-  return patch.wrapper()
+  return patch.wrapper
 }
 
 module.exports.commit = function commit (wrapper) {

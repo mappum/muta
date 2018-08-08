@@ -15,10 +15,7 @@ class VirtualObject {
   constructor (target, patch = infiniteObject()) {
     this.target = target
     this.patch = patch
-  }
-
-  wrapper () {
-    return new Proxy(this.target, this)
+    this.wrapper = new Proxy(this.target, this)
   }
 
   get (target, key) {
@@ -30,7 +27,7 @@ class VirtualObject {
     // key is assigned to, resolve with virtual value as target
     if (this.assignsTo(key)) {
       let childPatch = this.patch[ASSIGN][key]
-      return wrap(childPatch, childPatch)
+      return wrap(childPatch, childPatch, this.wrapper)
     }
 
     // key is deleted
@@ -40,7 +37,7 @@ class VirtualObject {
 
     // key is not overridden by patch,
     // OR key is recursively patched
-    return wrap(target[key], this.patch[key])
+    return wrap(target[key], this.patch[key], this.wrapper)
   }
 
   has (target, key) {
@@ -185,14 +182,18 @@ Object.assign(module.exports, {
   PATCH
 })
 
-function wrap (target, patch) {
+function wrap (target, patch, wrapper) {
   if (!isWrappable(target)) {
     return target
   }
 
+  if (typeof target === 'function') {
+    target = target.bind(wrapper)
+  }
+
   // TODO: use VirtualArray for arrays
   let virtual = new VirtualObject(target, patch)
-  return virtual.wrapper()
+  return virtual.wrapper
 }
 
 function isWrappable (value) {
