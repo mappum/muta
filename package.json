@@ -29,5 +29,17 @@
     "nyc": "^12.0.2",
     "standard": "^11.0.1",
     "tape": "^4.9.1"
-  }
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mappum/muta.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mappum/muta/issues"
+  },
+  "homepage": "https://github.com/mappum/muta#readme"
 }
