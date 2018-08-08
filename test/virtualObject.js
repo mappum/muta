@@ -165,6 +165,19 @@ test('VirtualObject', (t) => {
     t.end()
   })
 
+  t.test('function binding', (t) => {
+    let target = {
+      f: function () { return this.x },
+      x: 5
+    }
+    let obj = new VirtualObject(target)
+    let wrapper = obj.wrapper
+    wrapper.x += 1
+    t.equals(wrapper.f(), 6)
+    t.equals(target.f(), 5)
+    t.end()
+  })
+
   t.test('patch snapshot', (t) => {
     let target = {
       bar: { baz: 123 },

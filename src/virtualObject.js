@@ -189,6 +189,8 @@ function wrap (target, patch, wrapper) {
   }
 
   if (typeof target === 'function') {
+    // TODO: do this in a better way,
+    // this prevents consumers from re-brinding the function
     target = target.bind(wrapper)
   }
 
