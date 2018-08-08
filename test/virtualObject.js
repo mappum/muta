@@ -143,7 +143,7 @@ test('VirtualObject', (t) => {
     let keys = Object.keys(wrapper)
     t.deepEquals(keys, [ 'foo', 'bar' ])
     let inspected = inspect(wrapper)
-    if (process.browser) {
+    if (process.browser || process.versions.node.split('.')[0] < 8) {
       t.equals(inspected, '{ foo: 123, bar: true }')
     } else {
       t.equals(inspected, '{ foo: 123, bar: true, [Symbol(1)]: true, [Symbol(2)]: true }')
