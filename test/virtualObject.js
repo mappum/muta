@@ -133,6 +133,7 @@ test('VirtualObject', (t) => {
     let obj = new VirtualObject(target)
     let wrapper = obj.wrapper
     wrapper.bar = true
+    wrapper[s1] = true
     wrapper[s2] = true
     delete wrapper.foo2
     let names = Object.getOwnPropertyNames(wrapper)
@@ -142,7 +143,7 @@ test('VirtualObject', (t) => {
     let keys = Object.keys(wrapper)
     t.deepEquals(keys, [ 'foo', 'bar' ])
     let inspected = inspect(wrapper)
-    t.equals(inspected, '{ foo: 123, bar: true, [Symbol(1)]: 456 }')
+    t.equals(inspected, '{ foo: 123, bar: true, [Symbol(1)]: true, [Symbol(2)]: true }')
     t.end()
   })
 
