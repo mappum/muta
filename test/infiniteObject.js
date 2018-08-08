@@ -1,7 +1,7 @@
 'use strict'
 
 const test = require('tape')
-const infiniteObject = require('../src/infiniteObject.js')
+const infiniteObject = require('../lib/infiniteObject.js')
 
 test('infiniteObject', (t) => {
   t.test('create root', (t) => {

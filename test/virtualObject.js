@@ -2,7 +2,7 @@
 
 const { inspect } = require('util')
 const test = require('tape')
-const VirtualObject = require('../src/virtualObject.js')
+const VirtualObject = require('../lib/virtualObject.js')
 const { ASSIGN, DELETE } = VirtualObject
 
 test('VirtualObject', (t) => {
@@ -143,7 +143,11 @@ test('VirtualObject', (t) => {
     let keys = Object.keys(wrapper)
     t.deepEquals(keys, [ 'foo', 'bar' ])
     let inspected = inspect(wrapper)
-    t.equals(inspected, '{ foo: 123, bar: true, [Symbol(1)]: true, [Symbol(2)]: true }')
+    if (process.browser) {
+      t.equals(inspected, '{ foo: 123, bar: true }')
+    } else {
+      t.equals(inspected, '{ foo: 123, bar: true, [Symbol(1)]: true, [Symbol(2)]: true }')
+    }
     t.end()
   })
 

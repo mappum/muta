@@ -1,0 +1,24 @@
+sudo: false
+language: node_js
+install: true
+script: "./test/travis.sh"
+env:
+  matrix:
+  - NODE=10
+  - NODE=9
+  - NODE=8
+  - NODE=6
+  - BROWSER=chrome
+  - BROWSER=firefox
+  - BROWSER=safari
+  - BROWSER=iphone
+  global:
+  - secure: A169Uke2uwvpnGA+RM/9b5aF1WK3zuRNoYoj3SFflQbHQbLlOB7e8+TZmxzesZpme+yP2ax/tRpmpQQKBIzOFMYYNayF2dSZ33eyiOd2Jk2c9I5CnWOFl5KtQXj+X47YE+FbfZge+7NQ+nz+aqmLp//L5QS7PmR8RXTndj/ypwCMp5ylngHEIUaYfjkC2HNt2EN93qCjNY4BmSwIRtRJ0NxFXOWYLGD2+qxLt3P8p7yi2QFleNp8tCA6gvsmfa1uJHb3rk2IwcPNTR1Q0aGNBAfiUzhqIP51LJ6YsZ6MVGwhiTbVRhpSyEbmQBdtla9C7nzCWFfgyZNTB89s68mCxenRxVSs0Ww/R4qmmmEhR+7krh8gTNC2pLL1qkKzZ6qxTCQsQrtnj+6yamiJDSQGPSoSLiqpFWpAOavUZSKDLrak/A/uSTUcc4Klq2bz9xviwJHfKaWzMQ+hp4lzLHQWqavvBTMrQG8y2BHTTJ0cFzZcxpU2ZmYEgfnPFjy5YJfz/cEBCWvjtHkM1hsELEIY37NCvnve1usBUo/b2EaMgVx2OBpNBjLEZzO137SPQJ3A1uuOrFeGn2/VlDCSoXVoCHnAegSF8F8ALoGxW0g4UtGUERq3EjhThQ9sBAxb7pQgZIiIgt0qktjWXOqgc/oZw3v2i5XNRHA8NHVBauI1AEg=
+  - secure: AGgt01ye8sdHsAeaAJ//YVucssZNy4OqIbnFxTnbY9rExrvGuYaMLRCdwnkolx3DubjmS1rRuQutixUovsiDuBcCEQA3NdFhkfA5e40ZWNPww/2QjhY8r8Wi6AqNaOLQEeIBGGumQ6YB201Us4c0WUon6Mj3CPsUyhqJWaK4pFkKXRkVZ0GfGXgLo66+3yq/zKkGC0SPPkvJ30kGpLpH2TMzAj+s4OZglZ4cLZkciftCgUZwXE4S7E3/Rvv1P/TzM0l43kM5sFl2ze8nkcFCjrLCR1i20vlcqgW6anTZIS8czadVBYeY1UGhP3cZTd1Bw58gziPh5/quAsHxXyzvbehoBYGevkrZ+g5u7XMsq1bJYbtSVufKBbbg97qkT7Ygn7rElRaU5gHWRSRpLofFQB9Gl/h1pLaZciFS93BlFsvZQKkkL1omPpwbT6QWeB7HoO43xYuf62FGDYbQbkDMtBRf8LhFNAvQVPVihcPRUnmUDv7tYKEkAoDqNRNfjSJKFaq9kEuHhEQ+1nm5wvFhrwQX/DCpA5IBfX0LSupLGSaOQKQQM9wDzf/40fodOLIXIIAuVKVUlnbjMB6IMx1ne1OVi3h7DcLrmSClaXbjgAIXWnhWyP526yyAapIge/BfN6tyEgGcvU4e+D9pEka39Dji39mYAXbrfNLKpk4kO+0=
+notifications:
+  email: false
+addons:
+  sauce_connect: true
+  hosts:
+  - airtap.local
+before_install: if [ -z "$BROWSER" ]; then unset SAUCE_USERNAME && unset SAUCE_ACCESS_KEY; fi
