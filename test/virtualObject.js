@@ -2,7 +2,7 @@
 
 const { inspect } = require('util')
 const test = require('tape')
-const VirtualObject = require('../lib/virtualObject.js')
+const VirtualObject = require('../src/virtualObject.js')
 const { ASSIGN, DELETE } = VirtualObject
 const { deepEquals } = require('./common.js')
 

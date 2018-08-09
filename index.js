@@ -1,6 +1,6 @@
 'use strict'
 
-const VirtualObject = require('./lib/virtualObject.js')
+const VirtualObject = require('./src/virtualObject.js')
 const { ASSIGN, DELETE } = VirtualObject
 
 module.exports = function muta (target) {
