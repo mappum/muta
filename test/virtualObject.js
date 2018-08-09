@@ -152,6 +152,27 @@ test('VirtualObject', (t) => {
     t.end()
   })
 
+  t.test('keys of virtual child', (t) => {
+    let s = Symbol('s')
+    let target = { foo: { bar: 123 } }
+    let obj = new VirtualObject(target)
+    let wrapper = obj.wrapper
+    wrapper.foo = { baz: 123, [s]: 456 }
+    let names = Object.getOwnPropertyNames(wrapper.foo)
+    t.deepEquals(names, [ 'baz' ])
+    let symbols = Object.getOwnPropertySymbols(wrapper.foo)
+    t.deepEquals(symbols, [ s ])
+    let keys = Object.keys(wrapper.foo)
+    t.deepEquals(keys, [ 'baz' ])
+    let inspected = inspect(wrapper.foo)
+    if (process.browser || process.versions.node.split('.')[0] < 8) {
+      t.equals(inspected, '{ baz: 123 }')
+    } else {
+      t.equals(inspected, '{ baz: 123, [Symbol(s)]: 456 }')
+    }
+    t.end()
+  })
+
   t.test('commit', (t) => {
     let target = { foo: { bar: 123 } }
     let oldFoo = target.foo
