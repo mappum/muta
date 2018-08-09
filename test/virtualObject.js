@@ -4,6 +4,7 @@ const { inspect } = require('util')
 const test = require('tape')
 const VirtualObject = require('../lib/virtualObject.js')
 const { ASSIGN, DELETE } = VirtualObject
+const { deepEquals } = require('./common.js')
 
 test('VirtualObject', (t) => {
   t.test('create root instance', (t) => {
@@ -192,18 +193,9 @@ test('VirtualObject', (t) => {
     let obj = new VirtualObject(target)
     let wrapper = obj.wrapper
 
-    // XXX hack to convert symbols to strings, since tape doesn't
-    // support symbols in deepEquals
-    function deepEquals (a, b) {
-      t.equals(
-        JSON.stringify(replaceSymbols(a)),
-        JSON.stringify(replaceSymbols(b))
-      )
-    }
-
     // if setting/mutating, add the value to the parent in ASSIGN
     wrapper.bar.baz++
-    deepEquals(obj.patch, {
+    deepEquals(t, obj.patch, {
       bar: { [ASSIGN]: { baz: 124 } }
     })
 
@@ -211,33 +203,33 @@ test('VirtualObject', (t) => {
     // bar mutations get deleted when overriding
     wrapper.bar = { x: 5 }
     wrapper.a = 1
-    deepEquals(obj.patch, {
+    deepEquals(t, obj.patch, {
       [ASSIGN]: { bar: { x: 5 }, a: 1 }
     })
 
     // if mutating an object in ASSIGN, mutate the object inside the patch
     delete wrapper.bar.x
-    deepEquals(obj.patch, {
+    deepEquals(t, obj.patch, {
       [ASSIGN]: { bar: {}, a: 1 }
     })
 
     // if deleting a target property, add key to DELETE
     delete wrapper.xyz.abc
-    deepEquals(obj.patch, {
+    deepEquals(t, obj.patch, {
       [ASSIGN]: { bar: {}, a: 1 },
       xyz: { [DELETE]: { abc: true } }
     })
 
     // override deletions with ASSIGN
     wrapper.xyz.abc = 123
-    deepEquals(obj.patch, {
+    deepEquals(t, obj.patch, {
       [ASSIGN]: { bar: {}, a: 1 },
       xyz: { [ASSIGN]: { abc: 123 } }
     })
 
     // ASSIGN added object back to target value
     wrapper.xyz.abc = 5
-    deepEquals(obj.patch, {
+    deepEquals(t, obj.patch, {
       [ASSIGN]: { bar: {}, a: 1 },
       xyz: { [ASSIGN]: { abc: 5 } }
     })
@@ -245,14 +237,14 @@ test('VirtualObject', (t) => {
     // DELETE added value
     wrapper.x = 5
     delete wrapper.x
-    deepEquals(obj.patch, {
+    deepEquals(t, obj.patch, {
       [ASSIGN]: { bar: {}, a: 1 },
       xyz: { [ASSIGN]: { abc: 5 } }
     })
 
     // DELETE assigned value
     delete wrapper.a
-    deepEquals(obj.patch, {
+    deepEquals(t, obj.patch, {
       [ASSIGN]: { bar: {} },
       xyz: { [ASSIGN]: { abc: 5 } }
     })
@@ -260,14 +252,14 @@ test('VirtualObject', (t) => {
     // ASSIGN to original value
     wrapper.y += 1
     wrapper.y -= 1
-    deepEquals(obj.patch, {
+    deepEquals(t, obj.patch, {
       [ASSIGN]: { bar: {} },
       xyz: { [ASSIGN]: { abc: 5 } }
     })
 
     // ASSIGN to added value
     wrapper.bar.x = 5
-    deepEquals(obj.patch, {
+    deepEquals(t, obj.patch, {
       [ASSIGN]: { bar: { x: 5 } },
       xyz: { [ASSIGN]: { abc: 5 } }
     })
@@ -275,21 +267,21 @@ test('VirtualObject', (t) => {
     // ASSIGN to deleted original value
     delete wrapper.y
     wrapper.y = 5
-    deepEquals(obj.patch, {
+    deepEquals(t, obj.patch, {
       [ASSIGN]: { bar: { x: 5 } },
       xyz: { [ASSIGN]: { abc: 5 } }
     })
 
     // ASSIGN back to original object value
     wrapper.bar = originalBar
-    deepEquals(obj.patch, {
+    deepEquals(t, obj.patch, {
       xyz: { [ASSIGN]: { abc: 5 } }
     })
 
     // ASSIGN recursive object value to itself
     wrapper.bar.baz += 1
     wrapper.bar = originalBar
-    deepEquals(obj.patch, {
+    deepEquals(t, obj.patch, {
       xyz: { [ASSIGN]: { abc: 5 } },
       bar: { [ASSIGN]: { baz: 124 } }
     })
@@ -299,22 +291,3 @@ test('VirtualObject', (t) => {
 
   t.end()
 })
-
-function replaceSymbols (obj) {
-  let keys = [].concat(
-    Object.getOwnPropertySymbols(obj),
-    Object.getOwnPropertyNames(obj)
-  )
-  let res = {}
-  for (let key of keys) {
-    let value = obj[key]
-    if (value != null && typeof value === 'object') {
-      value = replaceSymbols(value)
-    }
-    if (typeof key === 'symbol') {
-      key = key.toString()
-    }
-    res[key] = value
-  }
-  return res
-}
