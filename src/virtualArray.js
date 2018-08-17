@@ -1,8 +1,12 @@
 'use strict'
 
-const MutableSlice = require('./mutableSlice.js')
+const VirtualSlice = require('./virtualSlice.js')
 const { keyToIndex } = require('./common.js')
 
+// VirtualArray represents a wrapper around a target array,
+// allowing virtual mutations including overriding elements,
+// shrinking, and growing. Currently, splicing is not supported
+// so growing and shrinking must happen at the ends (push, unshift, pop, shift).
 class VirtualArray {
   constructor (target, patch = {}) {
     this.target = target
@@ -25,7 +29,7 @@ class VirtualArray {
 
     let containers = [
       unshift,
-      new MutableSlice(this.target, shift, -(pop || 0)),
+      new VirtualSlice(this.target, shift, -(pop || 0)),
       push
     ]
 
@@ -70,7 +74,6 @@ class VirtualArray {
     }
 
     if (res.isTarget) {
-        // console.log(key, res, '1' in this.patch)
       if (res.index in this.patch) {
         // TODO: wrap
         return this.patch[res.index]
@@ -83,7 +86,7 @@ class VirtualArray {
 
   set (target, key, value) {
     if (key === 'length') {
-      throw Error('Cannot set "length" property')
+      return this.setLength(value)
     }
 
     let index = keyToIndex(key)
@@ -118,6 +121,75 @@ class VirtualArray {
     }
 
     delete res.container[res.index]
+  }
+
+  setLength (length) {
+    if (!Number.isInteger(length) || length < 0) {
+      throw RangeError('Invalid array length')
+    }
+
+    let lengthChange = this.length() - length
+    let { push, pop, shift, unshift } = this.patch
+
+    // noop
+    if (lengthChange === 0) {
+      return true
+    }
+
+    // increase length by setting on 'push' values
+    if (lengthChange > 0) {
+      if (push == null) {
+        this.patch.push = new Array(lengthChange)
+      } else {
+        push.length += lengthChange
+      }
+      return true
+    }
+
+    // decrease length (lengthChange is < 0)
+
+    // shorten or remove push array if it exists
+    if (push != null) {
+      // shorten push array
+      if (-lengthChange < push.length) {
+        push.length += lengthChange
+        return true
+      }
+
+      // remove whole push array
+      delete this.patch.push
+
+      // done if no more elements to remove
+      if (push.length === -lengthChange) {
+        return true
+      }
+
+      lengthChange += push.length
+    }
+
+    // shorten target range via pop count
+    let pop = pop || 0
+    let shift = shift || 0
+    let targetSliceLength = this.target.length - pop - shift
+    this.patch.pop = pop
+    if (-lengthChange <= targetSliceLength) {
+      // target slice is long enough, now we're done
+      this.patch.pop -= lengthChange
+      return true
+    } else {
+      // pop all of target slice and continue
+      this.patch.pop -= targetSliceLength
+      lengthChange += targetSliceLength
+    }
+
+    if (-lengthChange < unshift.length) {
+      // shorten unshift array
+      unshift.length += lengthChange
+    } else {
+      // remove whole unshift array
+      delete this.patch.unshift
+    }
+    return true
   }
 }
 
