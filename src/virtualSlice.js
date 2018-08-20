@@ -2,7 +2,10 @@
 
 const { keyToIndex } = require('./common.js')
 
-class MutableSlice {
+// VirtualSlice points to a range of elements in a target array,
+// without copying the values. It can be modified virtually by
+// overriding elements, but cannot be grown or shrunk.
+class VirtualSlice {
   constructor (target, start = 0, end = target.length) {
     this.target = target
     this.start = start
@@ -72,4 +75,4 @@ class MutableSlice {
   }
 }
 
-module.exports = MutableSlice
+module.exports = VirtualSlice
