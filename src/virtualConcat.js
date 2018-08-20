@@ -6,11 +6,11 @@ const { keyToIndex } = require('./common.js')
 // we can push/unshift/setLength more efficiently
 // (e.g. by mutating target-wrapped VirtualSlice in VirtualArray)
 
-// VirtualConcat points to an array of array-like elements,
-// and appears as if the elements were concatenated, but is
-// actually just keeping references to the original arrays.
+// VirtualConcat references an array of array-like elements,
+// and appears as if the elements were concatenated, but without
+// actually copying or allocating to concatenate.
 // Mutations to the wrapper are made to the underlying
-// references.
+// referenced arrays.
 class VirtualConcat {
   constructor (targets) {
     this.targets = targets
@@ -36,6 +36,10 @@ class VirtualConcat {
 
     // key is not an array index, access method
     if (typeof index !== 'number') {
+      if (key in methods) {
+        return methods[key].bind(this)
+      }
+
       let value = Reflect.get([], key)
       if (value != null) {
         value = value.bind(this.wrapper)
@@ -192,7 +196,7 @@ class VirtualConcat {
     lengthChange = -lengthChange
     // TODO: remove from start if shift
     for (let array of this.targets.reverse()) {
-      if (lengthChange < array.length) {
+      if (lengthChange <= array.length) {
         // partially shorten array then break
         array.length -= lengthChange
         break
@@ -203,6 +207,20 @@ class VirtualConcat {
       array.length = 0
     }
     return true
+  }
+}
+
+const methods = {
+  shift () {
+    for (let array of this.targets) {
+      if (array.length > 0) {
+        return array.shift()
+      }
+    }
+  },
+
+  unshift (...args) {
+    return this.targets[0].unshift(...args)
   }
 }
 
