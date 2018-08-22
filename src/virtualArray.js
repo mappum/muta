@@ -125,18 +125,50 @@ class VirtualArray extends VirtualObject {
     return true
   }
 
+  has (target, key) {
+    let deleted = this.deletes(key)
+    if (deleted) return false
+
+    let index = keyToIndex(key)
+    if (typeof index !== 'number') {
+      return super.has(target, key)
+    }
+
+    return index < this.length()
+  }
+
+  getOwnPropertyDescriptor (target, key) {
+    let has = this.has(target, key)
+    if (!has) return
+
+    let index = keyToIndex(key)
+    if (typeof index !== 'number') {
+      return super.getOwnPropertyDescriptor(target, key)
+    }
+
+    return {
+      value: this.get(target, key),
+      writable: true,
+      enumerable: true,
+      configurable: true
+    }
+  }
+
   ownKeys (target) {
     let keys = []
     for (let i = 0; i < this.length(); i++) {
-      if (!(i in this.wrapper)) continue
-      keys.push(String(i))
+      let key = String(i)
+      if (this.deletes(key)) continue
+      keys.push(key)
     }
+
     let objectKeys = super.ownKeys(target)
     for (let key of objectKeys) {
       let index = keyToIndex(key)
       if (typeof index === 'number') continue
       keys.push(key)
     }
+
     return keys
   }
 
@@ -164,33 +196,30 @@ class VirtualArray extends VirtualObject {
     }
 
     // decrease length (lengthChange is < 0)
+    lengthChange = -lengthChange
 
     // shorten or remove push array
-    if (-lengthChange < push.length) {
-      push.length += lengthChange
+    if (lengthChange <= push.length) {
+      push.length -= lengthChange
       return true
     }
-    // done if no more elements to remove
-    if (push.length === -lengthChange) {
-      return true
-    }
-    lengthChange += push.length
+    lengthChange -= push.length
 
     // shorten target range via pop count
     let targetSliceLength = this.target.length - pop - shift
-    if (-lengthChange <= targetSliceLength) {
+    if (lengthChange <= targetSliceLength) {
       // target slice is long enough, now we're done
-      this.patch[POP] -= lengthChange
+      this.patch[POP] += lengthChange
       return true
     } else {
       // pop all of target slice and continue
       this.patch[POP] -= targetSliceLength
-      lengthChange += targetSliceLength
+      lengthChange -= targetSliceLength
     }
 
-    if (-lengthChange < unshift.length) {
+    if (lengthChange < unshift.length) {
       // shorten unshift array
-      unshift.length += lengthChange
+      unshift.length -= lengthChange
     }
     return true
   }
@@ -199,13 +228,25 @@ class VirtualArray extends VirtualObject {
     let self = this
     return function * () {
       for (let i = 0; i < this.length(); i++) {
-        yield self.get(target, i)
+        yield self.get(null, i)
       }
     }
   }
 
   commit () {
-     // TODO: apply VirtualObject commit, then pop/shift/push/unshift
+    super.commit()
+
+    let push = this.patch[PUSH]
+    let unshift = this.patch[UNSHIFT]
+    let pop = this.patch[POP]
+    let shift = this.patch[SHIFT]
+    this.target.splice(0, shift, ...unshift)
+    this.target.splice(-pop, pop, ...push)
+
+    this.patch[PUSH] = []
+    this.patch[UNSHIFT] = []
+    this.patch[POP] = 0
+    this.patch[SHIFT] = 0
   }
 }
 
