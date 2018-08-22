@@ -134,7 +134,13 @@ class VirtualArray extends VirtualObject {
       return super.has(target, key)
     }
 
-    return index < this.length()
+    if (index < target.length) {
+      return super.has(target, key)
+    } else if (index < this.length()) {
+      return true
+    }
+    
+    return false
   }
 
   getOwnPropertyDescriptor (target, key) {
