@@ -1,48 +1,57 @@
 'use strict'
 
-const VirtualSlice = require('./virtualSlice.js')
+const VirtualObject = require('./virtualObject.js')
 const { keyToIndex } = require('./common.js')
+
+const SHIFT = Symbol('shift')
+const POP = Symbol('pop')
+const PUSH = Symbol('push')
+const UNSHIFT = Symbol('unshift')
 
 // VirtualArray represents a wrapper around a target array,
 // allowing virtual mutations including overriding elements,
 // shrinking, and growing. Currently, splicing is not supported
 // so growing and shrinking must happen at the ends (push, unshift, pop, shift).
-class VirtualArray {
-  constructor (target, patch = {}) {
-    this.target = target
-    this.patch = patch
-    this.wrapper = new Proxy(this.target, this)
+class VirtualArray extends VirtualObject {
+  constructor (target, patch) {
+    if (!(PUSH in patch)) {
+      patch[SHIFT] = 0
+      patch[POP] = 0
+      patch[PUSH] = []
+      patch[UNSHIFT] = []
+    }
+    super(target, patch)
   }
 
   length () {
-    let { shift, pop, push, unshift } = this.patch
     let length = this.target.length
-    length -= shift || 0
-    length -= pop || 0
-    if (push != null) length += push.length
-    if (unshift != null) length += unshift.length
+    length -= this.patch[SHIFT]
+    length -= this.patch[POP]
+    length += this.patch[PUSH].length
+    length += this.patch[UNSHIFT].length
     return length
   }
 
   resolveIndex (index) {
-    let { shift, pop, push, unshift } = this.patch
+    let unshiftLen = this.patch[UNSHIFT].length
+    if (index < unshiftLen) {
+      return { index, array: this.patch[UNSHIFT] }
+    }
 
-    let containers = [
-      unshift,
-      new VirtualSlice(this.target, shift, -(pop || 0)),
-      push
-    ]
+    index -= unshiftLen
+    index += this.patch[SHIFT]
 
-    for (let container of containers) {
-      if (container == null) continue
-      if (container.length <= index) {
-        return {
-          container,
-          index,
-          isTarget: container === containers[1]
-        }
-      }
-      index -= container.length
+    let targetLen = this.target.length - this.patch[POP]
+    if (index < targetLen) {
+      return { index, array: this.target }
+    }
+
+    index -= this.patch[SHIFT]
+    index -= targetLen
+
+    let pushLen = this.patch[PUSH].length
+    if (index < pushLen) {
+      return { index, array: this.patch[PUSH] }
     }
   }
 
@@ -52,36 +61,25 @@ class VirtualArray {
     }
 
     if (key === Symbol.iterator) {
-      let self = this
-      let length = this.length()
-      return function * () {
-        for (let i = 0; i < length; i++) {
-          yield self.get(target, i)
-        }
-      }
+      return this.iterator()
     }
 
     let index = keyToIndex(key)
     if (typeof index !== 'number') {
-      // TODO: wrap
-      return Reflect.get(target, key)
+      if (key in methods) {
+        return methods[key].bind(this)
+      }
+      return super.get(target, key)
     }
 
     let res = this.resolveIndex(index)
-    if (res == null) {
-      // out of bounds
-      return undefined
+    if (res == null) return
+
+    if (res.array === this.target) {
+      return super.get(target, res.index)
     }
 
-    if (res.isTarget) {
-      if (res.index in this.patch) {
-        // TODO: wrap
-        return this.patch[res.index]
-      }
-    }
-
-    // TODO: wrap
-    return res.container[res.index]
+    return res.array[res.index]
   }
 
   set (target, key, value) {
@@ -94,17 +92,17 @@ class VirtualArray {
       return super.set(target, key, value)
     }
 
-    let res = this.resolveIndex(index)
-    if (res == null) {
-      // out of bounds
-      return false
+    if (index >= this.length()) {
+      this.setLength(index + 1)
     }
 
-    if (res.isTarget) {
-      this.patch[res.index] = value
-    } else {
-      res.container[res.index] = value
+    let res = this.resolveIndex(index)
+
+    if (res.array === this.target) {
+      return super.set(target, res.index, value)
     }
+
+    res.array[res.index] = value
     return true
   }
 
@@ -116,11 +114,30 @@ class VirtualArray {
 
     let res = this.resolveIndex(index)
     if (res == null) {
-      // out of bounds
-      return false
+      return true
     }
 
-    delete res.container[res.index]
+    if (res.array === this.target) {
+      return super.deleteProperty(target, res.index)
+    }
+
+    delete res.array[res.index]
+    return true
+  }
+
+  ownKeys (target) {
+    let keys = []
+    for (let i = 0; i < this.length(); i++) {
+      if (!(i in this.wrapper)) continue
+      keys.push(String(i))
+    }
+    let objectKeys = super.ownKeys(target)
+    for (let key of objectKeys) {
+      let index = keyToIndex(key)
+      if (typeof index === 'number') continue
+      keys.push(key)
+    }
+    return keys
   }
 
   setLength (length) {
@@ -128,8 +145,11 @@ class VirtualArray {
       throw RangeError('Invalid array length')
     }
 
-    let lengthChange = this.length() - length
-    let { push, pop, shift, unshift } = this.patch
+    let lengthChange = length - this.length()
+    let push = this.patch[PUSH]
+    let unshift = this.patch[UNSHIFT]
+    let pop = this.patch[POP]
+    let shift = this.patch[SHIFT]
 
     // noop
     if (lengthChange === 0) {
@@ -137,59 +157,72 @@ class VirtualArray {
     }
 
     // increase length by setting on 'push' values
+    // TODO: subtract from pop count if > 0 (and delete index?)
     if (lengthChange > 0) {
-      if (push == null) {
-        this.patch.push = new Array(lengthChange)
-      } else {
-        push.length += lengthChange
-      }
+      push.length += lengthChange
       return true
     }
 
     // decrease length (lengthChange is < 0)
 
-    // shorten or remove push array if it exists
-    if (push != null) {
-      // shorten push array
-      if (-lengthChange < push.length) {
-        push.length += lengthChange
-        return true
-      }
-
-      // remove whole push array
-      delete this.patch.push
-
-      // done if no more elements to remove
-      if (push.length === -lengthChange) {
-        return true
-      }
-
-      lengthChange += push.length
+    // shorten or remove push array
+    if (-lengthChange < push.length) {
+      push.length += lengthChange
+      return true
     }
+    // done if no more elements to remove
+    if (push.length === -lengthChange) {
+      return true
+    }
+    lengthChange += push.length
 
     // shorten target range via pop count
-    let pop = pop || 0
-    let shift = shift || 0
     let targetSliceLength = this.target.length - pop - shift
-    this.patch.pop = pop
     if (-lengthChange <= targetSliceLength) {
       // target slice is long enough, now we're done
-      this.patch.pop -= lengthChange
+      this.patch[POP] -= lengthChange
       return true
     } else {
       // pop all of target slice and continue
-      this.patch.pop -= targetSliceLength
+      this.patch[POP] -= targetSliceLength
       lengthChange += targetSliceLength
     }
 
     if (-lengthChange < unshift.length) {
       // shorten unshift array
       unshift.length += lengthChange
-    } else {
-      // remove whole unshift array
-      delete this.patch.unshift
     }
     return true
+  }
+
+  iterator () {
+    let self = this
+    return function * () {
+      for (let i = 0; i < this.length(); i++) {
+        yield self.get(target, i)
+      }
+    }
+  }
+
+  commit () {
+     // TODO: apply VirtualObject commit, then pop/shift/push/unshift
+  }
+}
+
+const methods = {
+  pop () {
+    let length = this.length()
+    if (length === 0) return
+    let value = this.get(this.target, length - 1)
+    this.setLength(length - 1)
+    return value
+  },
+
+  shift () {
+    if (this.length() === 0) return
+    let value = this.get(this.target, 0)
+    this.patch[SHIFT] += 1
+    return value
   }
 }
 

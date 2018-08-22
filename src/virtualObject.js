@@ -194,9 +194,12 @@ function wrap (target, patch, wrapper) {
     target = target.bind(wrapper)
   }
 
-  // TODO: use VirtualArray for arrays
-  let virtual = new VirtualObject(target, patch)
-  return virtual.wrapper
+  if (Array.isArray(target)) {
+    let VA = require('./virtualArray.js')
+    return new VA(target, patch).wrapper
+  } else {
+    return new VirtualObject(target, patch).wrapper
+  }
 }
 
 function isWrappable (value) {
