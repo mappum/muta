@@ -194,7 +194,7 @@ function wrap (target, patch, wrapper) {
     target = target.bind(wrapper)
   }
 
-  if (Array.isArray(target)) {
+  if (target !== patch && Array.isArray(target)) {
     let VA = require('./virtualArray.js')
     return new VA(target, patch).wrapper
   } else {
