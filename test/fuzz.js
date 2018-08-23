@@ -10,18 +10,21 @@ const mutations = {
     target[key] = value
     return `set obj.${key} = ${JSON.stringify(value)}`
   },
-  override (target, parentKeys = []) {
+  override (target) {
     let key = selectKey(target)
     let value = randomValue()
-    parentKeys.push(key)
-    if (target[key] && typeof target[key] === 'object' && Math.random() < 0.5) {
-      return mutations.override(target[key], parentKeys)
+    if (
+      target[key] != null &&
+      typeof target[key] === 'object' &&
+      Math.random() < 0.5
+    ) {
+      return randomMutation(target[key])
     }
     target[key] = value
-    return `override obj.${parentKeys.join('.')} = ${JSON.stringify(value)}`
+    return `override obj.${key} = ${JSON.stringify(value)}`
   },
   delete (target) {
-    let key = selectKey(target)
+    let key = Math.random() < 0.9 ? selectKey(target) : randomKey()
     delete target[key]
     return `delete obj[${JSON.stringify(key)}]`
   }
@@ -70,7 +73,7 @@ const values = {
   },
   object () {
     let obj = {}
-    let properties = Math.random() * 3 | 0
+    let properties = Math.random() * 5 | 0
     for (let i = 0; i < properties; i++) {
       obj[randomKey()] = randomValue()
     }
@@ -78,7 +81,7 @@ const values = {
   },
   array () {
     let array = []
-    let length = Math.random() * 3 | 0
+    let length = Math.random() * 5 | 0
     let properties = Math.random() * 2 | 0
     for (let i = 0; i < length; i++) {
       if (Math.random() < 0.1) continue
@@ -131,7 +134,7 @@ function clone (obj) {
 }
 
 test('fuzz', (t) => {
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 10; i++) {
     t.test(`unmutated wrapper = target (${i})`, (t) => {
       let obj = values.object()
       let wrapper = muta(obj)
@@ -140,12 +143,12 @@ test('fuzz', (t) => {
     })
   }
 
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 400; i++) {
     t.test(`pre-commit wrapper = post-commit target (${i})`, (t) => {
       let obj = values.object()
       let wrapper = muta(obj)
       let mutationLog = []
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 40; i++) {
         mutationLog.push(randomMutation(wrapper))
       }
       let preCommit = clone(wrapper)
