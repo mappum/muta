@@ -1,7 +1,6 @@
 'use strict'
 
 const test = require('tape')
-const clone = require('clone')
 const muta = require('..')
 
 const mutations = {
@@ -77,19 +76,19 @@ const values = {
     }
     return obj
   },
-  // array () {
-  //   let array = []
-  //   let length = Math.random() * 5 | 0
-  //   let properties = Math.random() * 2 | 0
-  //   for (let i = 0; i < length; i++) {
-  //     if (Math.random() < 0.1) continue
-  //     array[i] = random(values)()
-  //   }
-  //   for (let i = 0; i < properties; i++) {
-  //     array[keys.property()] = randomValue()
-  //   }
-  //   return array
-  // }
+  array () {
+    let array = []
+    let length = Math.random() * 3 | 0
+    let properties = Math.random() * 2 | 0
+    for (let i = 0; i < length; i++) {
+      if (Math.random() < 0.1) continue
+      array[i] = random(values)()
+    }
+    for (let i = 0; i < properties; i++) {
+      array[keys.property()] = randomValue()
+    }
+    return array
+  }
 }
 
 function selectKey (target) {
@@ -107,30 +106,39 @@ const randomKey = () => random(keys)()
 const randomValue = () => random(values)()
 const randomMutation = (obj) => {
   if (Array.isArray(obj)) {
-    let muts = mutations.concat(arrayMutations)
+    let muts = { ...mutations, ...arrayMutations }
     return random(muts)(obj)
   }
   return random(mutations)(obj)
 }
 
+function clone (obj) {
+  let cloned = {}
+  if (Array.isArray(obj)) {
+    cloned = []
+  }
+
+  let keys = Object.keys(obj)
+  for (let key of keys) {
+    let value = obj[key]
+    if (value && typeof value === 'object') {
+      value = clone(value)
+    }
+    cloned[key] = value
+  }
+
+  return cloned
+}
+
 test('fuzz', (t) => {
   for (let i = 0; i < 20; i++) {
-    t.test(`wrapper value is equivalent to original object (${i})`, (t) => {
+    t.test(`unmutated wrapper = target (${i})`, (t) => {
       let obj = values.object()
       let wrapper = muta(obj)
       t.deepEqual(obj, wrapper)
       t.end()
     })
   }
-
-  // for (let i = 0; i < 20; i++) {
-  //   t.test(`wrapper value is equivalent to original array (${i})`, (t) => {
-  //     let obj = values.array()
-  //     let wrapper = muta(obj)
-  //     t.deepEqual(obj, wrapper)
-  //     t.end()
-  //   })
-  // }
 
   for (let i = 0; i < 40; i++) {
     t.test(`pre-commit wrapper = post-commit target (${i})`, (t) => {
@@ -142,7 +150,7 @@ test('fuzz', (t) => {
       }
       let preCommit = clone(wrapper)
       muta.commit(wrapper)
-      t.deepEqual(obj, preCommit)
+      t.deepEquals(obj, preCommit)
       t.end()
     })
   }
