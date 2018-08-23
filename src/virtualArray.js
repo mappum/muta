@@ -14,13 +14,13 @@ const UNSHIFT = Symbol('unshift')
 // so growing and shrinking must happen at the ends (push, unshift, pop, shift).
 class VirtualArray extends VirtualObject {
   constructor (target, patch) {
-    if (!(PUSH in patch)) {
-      patch[SHIFT] = 0
-      patch[POP] = 0
-      patch[PUSH] = []
-      patch[UNSHIFT] = []
-    }
     super(target, patch)
+    if (!(PUSH in this.patch)) {
+      this.patch[SHIFT] = 0
+      this.patch[POP] = 0
+      this.patch[PUSH] = []
+      this.patch[UNSHIFT] = []
+    }
   }
 
   length () {
@@ -134,13 +134,13 @@ class VirtualArray extends VirtualObject {
       return super.has(target, key)
     }
 
-    if (index < target.length) {
-      return super.has(target, key)
-    } else if (index < this.length()) {
-      return true
+    let res = this.resolveIndex(index)
+    if (res == null) return false
+
+    if (res.array === this.target) {
+      return super.has(target, res.index)
     }
-    
-    return false
+    return res.index in res.array
   }
 
   getOwnPropertyDescriptor (target, key) {
@@ -274,3 +274,9 @@ const methods = {
 }
 
 module.exports = VirtualArray
+Object.assign(module.exports, {
+  PUSH,
+  POP,
+  UNSHIFT,
+  SHIFT
+})
