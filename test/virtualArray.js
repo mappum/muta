@@ -3,6 +3,12 @@
 const test = require('tape')
 const VirtualArray = require('../src/virtualArray.js')
 const VirtualObject = require('../src/virtualObject.js')
+const {
+  PUSH,
+  POP,
+  UNSHIFT,
+  SHIFT
+} = VirtualArray
 
 test('VirtualArray', (t) => {
   t.test('create root instance', (t) => {
@@ -170,6 +176,117 @@ test('VirtualArray', (t) => {
     t.equals(wrapper.length, 6)
     t.true(5 in wrapper)
     t.equals(wrapper[5], 1)
+    t.end()
+  })
+
+  t.test('assign invalid length', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    try {
+      wrapper.length = -1
+      t.fail()
+    } catch (err) {
+      t.equals(err.message, 'Invalid array length')
+    }
+
+    try {
+      wrapper.length = 'x'
+      t.fail()
+    } catch (err) {
+      t.equals(err.message, 'Invalid array length')
+    }
+
+    t.end()
+  })
+
+  t.test('push over popped values', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.pop()
+    wrapper.push(3.5)
+    wrapper.push(4)
+
+    t.equals(wrapper[2], 3.5)
+    t.equals(obj.patch[POP], 0)
+    t.deepEquals(obj.patch[PUSH], [ 4 ])
+
+    t.end()
+  })
+
+  t.test('unshift over shifted values', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.shift()
+    wrapper.unshift(1.5)
+    wrapper.unshift(0)
+
+    t.equals(wrapper[1], 1.5)
+    t.equals(obj.patch[SHIFT], 0)
+    t.deepEquals(obj.patch[UNSHIFT], [ 0 ])
+
+    t.end()
+  })
+
+  t.test('pop/shift on empty array', (t) => {
+    let target = []
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+    wrapper.shift()
+    wrapper.pop()
+    t.end()
+  })
+
+  t.test('iterator', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    let cloned = [ ...wrapper ]
+    t.deepEquals(cloned, target)
+
+    t.end()
+  })
+
+  t.test('commit', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.shift()
+    wrapper.push(4, 5)
+    obj.commit()
+
+    t.deepEquals(target, [ 2, 3, 4, 5 ])
+    t.deepEquals(wrapper, [ 2, 3, 4, 5 ])
+    t.equals(obj.patch[SHIFT], 0)
+    t.equals(obj.patch[PUSH].length, 0)
+
+    t.end()
+  })
+
+  t.test('keys', (t) => {
+    let target = [1, 2, 3]
+    target.x = 5
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    delete wrapper[1]
+    wrapper.y = 6
+
+    let keys = Object.keys(wrapper)
+    t.true(keys.includes('0'))
+    t.false(keys.includes('1'))
+    t.true(keys.includes('2'))
+    t.true(keys.includes('x'))
+    t.true(keys.includes('y'))
+    t.false(keys.includes('length'))
+
     t.end()
   })
 
