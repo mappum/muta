@@ -8,11 +8,6 @@ const POP = Symbol('pop')
 const PUSH = Symbol('push')
 const UNSHIFT = Symbol('unshift')
 
-// TODO: push over popped elements,
-//       unshift over shifted elements
-// TODO: shift from unshifted elements first,
-//       pop from pushed elements first
-
 // VirtualArray represents a wrapper around a target array,
 // allowing virtual mutations including overriding elements,
 // shrinking, and growing. Currently, splicing is not supported
@@ -265,6 +260,11 @@ const methods = {
   pop () {
     let length = this.length()
     if (length === 0) return
+
+    if (this.patch[PUSH].length > 0) {
+      return this.patch[PUSH].pop()
+    }
+
     let value = this.get(this.target, length - 1)
     this.setLength(length - 1)
     return value
@@ -272,6 +272,11 @@ const methods = {
 
   shift () {
     if (this.length() === 0) return
+
+    if (this.patch[UNSHIFT].length > 0) {
+      return this.patch[UNSHIFT].shift()
+    }
+
     let value = this.get(this.target, 0)
     this.patch[SHIFT] += 1
     return value

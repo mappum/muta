@@ -232,6 +232,34 @@ test('VirtualArray', (t) => {
     t.end()
   })
 
+  t.test('pop from pushed values', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.push(4)
+    wrapper.pop()
+
+    t.equals(obj.patch[POP], 0)
+    t.equals(obj.patch[PUSH].length, 0)
+
+    t.end()
+  })
+
+  t.test('shift from unshifted values', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.unshift(0)
+    wrapper.shift()
+
+    t.equals(obj.patch[SHIFT], 0)
+    t.equals(obj.patch[UNSHIFT].length, 0)
+
+    t.end()
+  })
+
   t.test('pop/shift on empty array', (t) => {
     let target = []
     let obj = new VirtualArray(target)
