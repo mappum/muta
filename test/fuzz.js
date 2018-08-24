@@ -18,7 +18,7 @@ const mutations = {
       typeof target[key] === 'object' &&
       Math.random() < 0.5
     ) {
-      return randomMutation(target[key])
+      return mutate(target[key])
     }
     target[key] = value
     return `override obj.${key} = ${JSON.stringify(value)}`
@@ -95,7 +95,7 @@ const values = {
 }
 
 function selectKey (target) {
-  let keys = Object.keys(target)
+  let keys = Object.keys(target).sort()
   let index = Math.random() * keys.length | 0
   return keys[index]
 }
@@ -107,12 +107,16 @@ function random (obj) {
 
 const randomKey = () => random(keys)()
 const randomValue = () => random(values)()
-const randomMutation = (obj) => {
+const randomMutation = () => random(mutations)
+const randomArrayMutation = () => {
+  let muts = { ...mutations, ...arrayMutations }
+  return random(muts)
+}
+const mutate = (obj) => {
   if (Array.isArray(obj)) {
-    let muts = { ...mutations, ...arrayMutations }
-    return random(muts)(obj)
+    return randomArrayMutation()(obj)
   }
-  return random(mutations)(obj)
+  return randomMutation()(obj)
 }
 
 function clone (obj) {
@@ -121,7 +125,7 @@ function clone (obj) {
     cloned = []
   }
 
-  let keys = Object.keys(obj)
+  let keys = Object.keys(obj).sort()
   for (let key of keys) {
     let value = obj[key]
     if (value && typeof value === 'object') {
@@ -134,29 +138,55 @@ function clone (obj) {
 }
 
 test('fuzz', (t) => {
-  for (let i = 0; i < 10; i++) {
-    t.test(`unmutated wrapper = target (${i})`, (t) => {
+  t.test('unmutated wrapper = target', (t) => {
+    for (let i = 0; i < 100; i++) {
       let obj = values.object()
       let wrapper = muta(obj)
       t.deepEqual(obj, wrapper)
-      t.end()
-    })
-  }
+    }
+    t.end()
+  })
 
-  for (let i = 0; i < 400; i++) {
-    t.test(`pre-commit wrapper = post-commit target (${i})`, (t) => {
+  t.test('wrapper mutation result = normal object mutation result', (t) => {
+    for (let i = 0; i < 200; i++) {
+      let obj = values.object()
+      let cloned = clone(obj)
+      let wrapper = muta(obj)
+      t.deepEquals(wrapper, cloned)
+      for (let i = 0; i < 20; i++) {
+        let mutate = randomMutation()
+
+        // reuse same randomness for both mutations
+        let random = Math.random
+        let values = new Array(1000).fill(0).map(random)
+        let j = 0
+        Math.random = () => values[j++]
+
+        mutate(wrapper)
+        j = 0
+        mutate(cloned)
+
+        t.deepEquals(wrapper, cloned)
+        Math.random = random
+      }
+    }
+    t.end()
+  })
+
+  t.test('pre-commit wrapper = post-commit target', (t) => {
+    for (let i = 0; i < 1000; i++) {
       let obj = values.object()
       let wrapper = muta(obj)
       let mutationLog = []
       for (let i = 0; i < 40; i++) {
-        mutationLog.push(randomMutation(wrapper))
+        mutationLog.push(mutate(wrapper))
       }
       let preCommit = clone(wrapper)
       muta.commit(wrapper)
       t.deepEquals(obj, preCommit)
-      t.end()
-    })
-  }
+    }
+    t.end()
+  })
 
   t.end()
 })
