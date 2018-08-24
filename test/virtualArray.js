@@ -379,5 +379,38 @@ test('VirtualArray', (t) => {
     t.end()
   })
 
+  t.test('delete non-index property', (t) => {
+    let target = [1, 2, 3]
+    target.x = 5
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+    delete wrapper.x
+
+    t.false('x' in wrapper)
+
+    t.end()
+  })
+
+  t.test('delete out-of-bounds index', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+    delete wrapper[100]
+    t.equals(wrapper.length, 3)
+    t.end()
+  })
+
+  t.test('delete pushed value', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+    wrapper.push(4)
+    delete wrapper[3]
+    t.equals(wrapper.length, 4)
+    t.equals(wrapper[3], undefined)
+    t.false(3 in wrapper)
+    t.end()
+  })
+
   t.end()
 })
