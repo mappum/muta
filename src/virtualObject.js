@@ -27,7 +27,11 @@ class VirtualObject {
     // key is assigned to, resolve with virtual value as target
     if (this.assignsTo(key)) {
       let childPatch = this.patch[ASSIGN][key]
-      return wrap(childPatch, childPatch, this.wrapper)
+      let child = wrap(childPatch, childPatch, this.wrapper)
+      if (child && child.wrapper) {
+        return child.wrapper
+      }
+      return child
     }
 
     // key is deleted
@@ -37,7 +41,11 @@ class VirtualObject {
 
     // key is not overridden by patch,
     // OR key is recursively patched
-    return wrap(target[key], this.patch[key], this.wrapper)
+    let child = wrap(target[key], this.patch[key], this.wrapper)
+    if (child && child.wrapper) {
+      return child.wrapper
+    }
+    return child
   }
 
   has (target, key) {
@@ -170,7 +178,7 @@ class VirtualObject {
 
     // recurse
     for (let key in this.patch) {
-      let child = new VirtualObject(this.target[key], this.patch[key])
+      let child = wrap(this.target[key], this.patch[key], this.wrapper)
       child.commit()
     }
   }
@@ -196,9 +204,9 @@ function wrap (target, patch, wrapper) {
 
   if (target !== patch && Array.isArray(target)) {
     let VA = require('./virtualArray.js')
-    return new VA(target, patch).wrapper
+    return new VA(target, patch)
   } else {
-    return new VirtualObject(target, patch).wrapper
+    return new VirtualObject(target, patch)
   }
 }
 

@@ -8,6 +8,11 @@ const POP = Symbol('pop')
 const PUSH = Symbol('push')
 const UNSHIFT = Symbol('unshift')
 
+// TODO: push over popped elements,
+//       unshift over shifted elements
+// TODO: shift from unshifted elements first,
+//       pop from pushed elements first
+
 // VirtualArray represents a wrapper around a target array,
 // allowing virtual mutations including overriding elements,
 // shrinking, and growing. Currently, splicing is not supported
@@ -25,6 +30,7 @@ class VirtualArray extends VirtualObject {
 
   length () {
     let length = this.target.length
+    console.log(this.patch)
     length -= this.patch[SHIFT]
     length -= this.patch[POP]
     length += this.patch[PUSH].length
@@ -69,14 +75,14 @@ class VirtualArray extends VirtualObject {
       if (key in methods) {
         return methods[key].bind(this)
       }
-      return super.get(target, key)
+      return super.get(this.target, key)
     }
 
     let res = this.resolveIndex(index)
     if (res == null) return
 
     if (res.array === this.target) {
-      return super.get(target, res.index)
+      return super.get(this.target, res.index)
     }
 
     return res.array[res.index]
@@ -233,7 +239,7 @@ class VirtualArray extends VirtualObject {
   iterator () {
     let self = this
     return function * () {
-      for (let i = 0; i < this.length(); i++) {
+      for (let i = 0; i < self.length(); i++) {
         yield self.get(null, i)
       }
     }
@@ -247,7 +253,7 @@ class VirtualArray extends VirtualObject {
     let pop = this.patch[POP]
     let shift = this.patch[SHIFT]
     this.target.splice(0, shift, ...unshift)
-    this.target.splice(-pop, pop, ...push)
+    this.target.splice(this.target.length, pop, ...push)
 
     this.patch[PUSH] = []
     this.patch[UNSHIFT] = []
