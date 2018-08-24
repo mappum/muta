@@ -178,28 +178,6 @@ test('VirtualArray', (t) => {
     t.end()
   })
 
-  t.test('assign invalid length', (t) => {
-    let target = [1, 2, 3]
-    let obj = new VirtualArray(target)
-    let wrapper = obj.wrapper
-
-    try {
-      wrapper.length = -1
-      t.fail()
-    } catch (err) {
-      t.equals(err.message, 'Invalid array length')
-    }
-
-    try {
-      wrapper.length = 'x'
-      t.fail()
-    } catch (err) {
-      t.equals(err.message, 'Invalid array length')
-    }
-
-    t.end()
-  })
-
   t.test('push over popped values', (t) => {
     let target = [1, 2, 3]
     let obj = new VirtualArray(target)
@@ -409,6 +387,128 @@ test('VirtualArray', (t) => {
     t.equals(wrapper.length, 4)
     t.equals(wrapper[3], undefined)
     t.false(3 in wrapper)
+    t.end()
+  })
+
+  t.test('set length to current value', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+    wrapper.length = 3
+    t.equals(wrapper.length, 3)
+    t.end()
+  })
+
+  t.test('increase length', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.length += 1
+
+    t.equals(wrapper.length, 4)
+    t.equals(wrapper[0], 1)
+    t.equals(wrapper[3], undefined)
+    t.false(3 in wrapper)
+
+    t.end()
+  })
+
+  t.test('decrease length', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.length -= 1
+
+    t.equals(wrapper.length, 2)
+    t.equals(wrapper[0], 1)
+    t.equals(wrapper[2], undefined)
+    t.false(2 in wrapper)
+
+    t.end()
+  })
+
+  t.test('decrease length with pushed value', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.push(4)
+    wrapper.length -= 2
+
+    t.equals(wrapper.length, 2)
+    t.equals(wrapper[0], 1)
+    t.equals(wrapper[2], undefined)
+    t.equals(wrapper[3], undefined)
+    t.false(2 in wrapper)
+    t.false(3 in wrapper)
+
+    t.end()
+  })
+
+  t.test('decrease length with pushed values', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.push(4, 5)
+    wrapper.length -= 1
+
+    t.equals(wrapper.length, 4)
+    t.equals(wrapper[0], 1)
+    t.equals(wrapper[3], 4)
+    t.equals(wrapper[4], undefined)
+
+    t.end()
+  })
+
+  t.test('decrease length with unshifted value', (t) => {
+    let target = [1]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.unshift(0)
+    wrapper.length -= 1
+
+    t.equals(wrapper.length, 1)
+    t.equals(wrapper[0], 0)
+
+    t.end()
+  })
+
+  t.test('decrease length with unshifted value', (t) => {
+    let target = [1]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.unshift(0)
+    wrapper.length = 0
+
+    t.equals(wrapper.length, 0)
+
+    t.end()
+  })
+
+  t.test('set invalid length', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    try {
+      wrapper.length = -1
+      t.fail()
+    } catch (err) {
+      t.equals(err.message, 'Invalid array length')
+    }
+
+    try {
+      wrapper.length = 'x'
+      t.fail()
+    } catch (err) {
+      t.equals(err.message, 'Invalid array length')
+    }
+
     t.end()
   })
 

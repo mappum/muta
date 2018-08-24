@@ -210,6 +210,7 @@ class VirtualArray extends VirtualObject {
       return true
     }
     lengthChange -= push.length
+    push.length = 0
 
     // shorten target range via pop count
     let targetSliceLength = this.target.length - pop - shift
@@ -219,14 +220,12 @@ class VirtualArray extends VirtualObject {
       return true
     } else {
       // pop all of target slice and continue
-      this.patch[POP] -= targetSliceLength
+      this.patch[POP] += targetSliceLength
       lengthChange -= targetSliceLength
     }
 
-    if (lengthChange < unshift.length) {
-      // shorten unshift array
-      unshift.length -= lengthChange
-    }
+    // shorten unshift array
+    unshift.length -= lengthChange
     return true
   }
 
