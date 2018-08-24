@@ -512,5 +512,20 @@ test('VirtualArray', (t) => {
     t.end()
   })
 
+  t.test('splice errors', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    try {
+      wrapper.splice(0, 1)
+      t.fail()
+    } catch (err) {
+      t.equals(err.message, 'splice not supported by VirtualArray')
+    }
+
+    t.end()
+  })
+
   t.end()
 })
