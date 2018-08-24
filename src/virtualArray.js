@@ -30,7 +30,6 @@ class VirtualArray extends VirtualObject {
 
   length () {
     let length = this.target.length
-    console.log(this.patch)
     length -= this.patch[SHIFT]
     length -= this.patch[POP]
     length += this.patch[PUSH].length

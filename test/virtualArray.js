@@ -103,7 +103,6 @@ test('VirtualArray', (t) => {
     t.equals(target.length, 3)
     t.equals(target[3], undefined)
     t.equals(target[4], undefined)
-    console.log(obj.patch)
     t.end()
   })
 
@@ -286,6 +285,68 @@ test('VirtualArray', (t) => {
     t.true(keys.includes('x'))
     t.true(keys.includes('y'))
     t.false(keys.includes('length'))
+
+    t.end()
+  })
+
+  t.test('getOwnPropertyDescriptor', (t) => {
+    let target = [1, 2, 3]
+    target.x = 5
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    t.deepEquals(
+      Object.getOwnPropertyDescriptor(wrapper, '0'),
+      {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true
+      }
+    )
+    t.deepEquals(
+      Object.getOwnPropertyDescriptor(wrapper, 'length'),
+      {
+        value: 3,
+        writable: true,
+        enumerable: false,
+        configurable: false
+      }
+    )
+    t.deepEquals(
+      Object.getOwnPropertyDescriptor(wrapper, 'x'),
+      {
+        value: 5,
+        writable: true,
+        enumerable: true,
+        configurable: true
+      }
+    )
+    t.deepEquals(
+      Object.getOwnPropertyDescriptor(wrapper, 'y'),
+      undefined
+    )
+
+    t.end()
+  })
+
+  t.test('in', (t) => {
+    let target = [1, 2, 3]
+    target.x = 5
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+    delete wrapper[1]
+    wrapper.push(4)
+
+    t.true(0 in wrapper)
+    t.true('0' in wrapper)
+    t.false(1 in wrapper)
+    t.false('1' in wrapper)
+    t.true(3 in wrapper)
+    t.true('3' in wrapper)
+    t.true('length' in wrapper)
+    t.true('x' in wrapper)
+    t.false('y' in wrapper)
 
     t.end()
   })
