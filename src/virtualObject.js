@@ -69,7 +69,7 @@ class VirtualObject {
     }
 
     // if set back to original value, remove from patch
-    if (target[key] === value) {
+    if (key in target && target[key] === value) {
       if (this.assignsTo(key)) {
         delete this.patch[ASSIGN][key]
       } else if (this.deletes(key)) {
