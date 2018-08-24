@@ -275,6 +275,28 @@ const methods = {
     let value = this.get(this.target, 0)
     this.patch[SHIFT] += 1
     return value
+  },
+
+  unshift (...args) {
+    let { patch } = this
+    while (patch[SHIFT] > 0 && args.length > 0) {
+      patch[SHIFT] -= 1
+      this.set(this.target, 0, args.shift())
+    }
+    patch[UNSHIFT].unshift(...args)
+  },
+
+  push (...args) {
+    let { patch } = this
+    while (patch[POP] > 0 && args.length > 0) {
+      patch[POP] -= 1
+      this.set(this.target, this.length() - 1, args.shift())
+    }
+    patch[PUSH].push(...args)
+  },
+
+  splice () {
+    throw Error('splice not supported by VirtualArray')
   }
 }
 
