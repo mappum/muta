@@ -27,11 +27,7 @@ class VirtualObject {
     // key is assigned to, resolve with virtual value as target
     if (this.assignsTo(key)) {
       let childPatch = this.patch[ASSIGN][key]
-      let child = wrap(childPatch, childPatch, this.wrapper)
-      if (child && child.wrapper) {
-        return child.wrapper
-      }
-      return child
+      return this.wrap(childPatch, childPatch)
     }
 
     // key is deleted
@@ -41,11 +37,7 @@ class VirtualObject {
 
     // key is not overridden by patch,
     // OR key is recursively patched
-    let child = wrap(target[key], this.patch[key], this.wrapper)
-    if (child && child.wrapper) {
-      return child.wrapper
-    }
-    return child
+    return this.wrap(target[key], this.patch[key])
   }
 
   has (target, key) {
@@ -178,9 +170,19 @@ class VirtualObject {
 
     // recurse
     for (let key in this.patch) {
+      console.log(key, this.target, this.patch)
       let child = wrap(this.target[key], this.patch[key], this.wrapper)
       child.commit()
     }
+  }
+
+  wrap (target, patch) {
+    if (!isWrappable(target)) {
+      return target
+    }
+
+    let child = wrap(target, patch, this.wrapper)
+    return child.wrapper
   }
 }
 
@@ -192,10 +194,6 @@ Object.assign(module.exports, {
 })
 
 function wrap (target, patch, wrapper) {
-  if (!isWrappable(target)) {
-    return target
-  }
-
   if (typeof target === 'function') {
     // TODO: do this in a better way,
     // this prevents consumers from re-brinding the function

@@ -35,17 +35,21 @@ const arrayMutations = {
     let values = new Array(Math.random() * 2 | 0 + 1)
     values = values.fill(0).map(randomValue)
     target.push(...values)
+    return `push (${values.join(', ')})`
   },
   unshift (target) {
     let values = new Array(Math.random() * 2 | 0 + 1)
     values = values.fill(0).map(randomValue)
     target.unshift(...values)
+    return `unshift (${values.join(', ')})`
   },
   shift (target) {
     target.shift()
+    return 'shift'
   },
   pop (target) {
     target.pop()
+    return 'pop'
   }
 }
 
@@ -174,14 +178,15 @@ test('fuzz', (t) => {
   })
 
   t.test('pre-commit wrapper = post-commit target', (t) => {
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 4000; i++) {
       let obj = values.object()
       let wrapper = muta(obj)
       let mutationLog = []
-      for (let i = 0; i < 40; i++) {
+      for (let i = 0; i < 5; i++) {
         mutationLog.push(mutate(wrapper))
       }
       let preCommit = clone(wrapper)
+      let patch = muta.patch(wrapper)
       muta.commit(wrapper)
       t.deepEquals(obj, preCommit)
     }

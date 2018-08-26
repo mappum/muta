@@ -204,7 +204,7 @@ test('VirtualArray', (t) => {
     wrapper.unshift(0)
 
     t.equals(wrapper[1], 1.5)
-    t.equals(obj.patch[SHIFT], 0)
+    t.false(SHIFT in obj.patch)
     t.deepEquals(obj.patch[UNSHIFT], [ 0 ])
 
     t.end()
@@ -218,8 +218,8 @@ test('VirtualArray', (t) => {
     wrapper.push(4)
     wrapper.pop()
 
-    t.equals(obj.patch[POP], 0)
-    t.equals(obj.patch[PUSH].length, 0)
+    t.false(POP in obj.patch)
+    t.false(PUSH in obj.patch)
 
     t.end()
   })
@@ -232,8 +232,8 @@ test('VirtualArray', (t) => {
     wrapper.unshift(0)
     wrapper.shift()
 
-    t.equals(obj.patch[SHIFT], 0)
-    t.equals(obj.patch[UNSHIFT].length, 0)
+    t.false(SHIFT in obj.patch)
+    t.false(UNSHIFT in obj.patch)
 
     t.end()
   })
@@ -269,8 +269,8 @@ test('VirtualArray', (t) => {
 
     t.deepEquals(target, [ 2, 3, 4, 5 ])
     t.deepEquals(wrapper, [ 2, 3, 4, 5 ])
-    t.equals(obj.patch[SHIFT], 0)
-    t.equals(obj.patch[PUSH].length, 0)
+    t.false(SHIFT in obj.patch)
+    t.false(PUSH in obj.patch)
 
     t.end()
   })
