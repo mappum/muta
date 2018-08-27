@@ -528,5 +528,57 @@ test('VirtualArray', (t) => {
     t.end()
   })
 
+  t.test('commit pop', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.pop()
+    obj.commit()
+
+    t.deepEquals(target, [ 1, 2 ])
+
+    t.end()
+  })
+
+  t.test('commit shift', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.shift()
+    obj.commit()
+
+    t.deepEquals(target, [ 2, 3 ])
+
+    t.end()
+  })
+
+  t.test('commit push', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.push(4)
+    obj.commit()
+
+    t.deepEquals(target, [ 1, 2, 3, 4 ])
+
+    t.end()
+  })
+
+  t.test('commit unshift', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.unshift(0)
+    obj.commit()
+
+    t.deepEquals(target, [ 0, 1, 2, 3 ])
+
+    t.end()
+  })
+
   t.end()
 })
