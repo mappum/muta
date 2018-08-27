@@ -2,6 +2,7 @@
 
 const test = require('tape')
 const muta = require('..')
+const { deepEquals } = require('./common.js')
 
 const mutations = {
   set (target) {
@@ -146,7 +147,7 @@ test('fuzz', (t) => {
     for (let i = 0; i < 100; i++) {
       let obj = values.object()
       let wrapper = muta(obj)
-      t.deepEqual(obj, wrapper)
+      deepEquals(t, obj, wrapper)
     }
     t.end()
   })
@@ -170,7 +171,7 @@ test('fuzz', (t) => {
         j = 0
         mutate(cloned)
 
-        t.deepEquals(wrapper, cloned)
+        deepEquals(t, wrapper, cloned)
         Math.random = random
       }
     }
@@ -181,13 +182,12 @@ test('fuzz', (t) => {
     for (let i = 0; i < 4000; i++) {
       let obj = values.object()
       let wrapper = muta(obj)
-      let mutationLog = []
       for (let i = 0; i < 5; i++) {
-        mutationLog.push(mutate(wrapper))
+        mutate(wrapper)
       }
       let preCommit = clone(wrapper)
       muta.commit(wrapper)
-      t.deepEquals(obj, preCommit)
+      deepEquals(t, obj, preCommit)
     }
     t.end()
   })
