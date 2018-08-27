@@ -166,8 +166,9 @@ class VirtualArray extends VirtualObject {
     let keys = []
     for (let i = 0; i < this.length(); i++) {
       let key = String(i)
-      if (this.deletes(key)) continue
-      keys.push(key)
+      if (this.has(target, key)) {
+        keys.push(key)
+      }
     }
 
     let objectKeys = super.ownKeys(this.target)
