@@ -170,7 +170,6 @@ class VirtualObject {
 
     // recurse
     for (let key in this.patch) {
-      console.log(key, this.target, this.patch)
       let child = wrap(this.target[key], this.patch[key], this.wrapper)
       child.commit()
     }
