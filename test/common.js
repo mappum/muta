@@ -1,18 +1,20 @@
 'use strict'
 
 function replaceSymbols (obj) {
-  let keys = [].concat(
-    Object.getOwnPropertySymbols(obj),
-    Object.getOwnPropertyNames(obj)
-  )
-  let res = {}
-  for (let key of keys) {
-    let value = obj[key]
+  let entries = []
+    .concat(
+      Object.getOwnPropertySymbols(obj),
+      Object.getOwnPropertyNames(obj)
+    )
+    .map((key) => ({
+      key: key.toString(),
+      value: obj[key]
+    }))
+    .sort((a, b) => b.key > a.key ? 1 : -1)
+  let res = Array.isArray(obj) ? [] : {}
+  for (let { key, value } of entries) {
     if (value != null && typeof value === 'object') {
       value = replaceSymbols(value)
-    }
-    if (typeof key === 'symbol') {
-      key = key.toString()
     }
     res[key] = value
   }
