@@ -239,8 +239,18 @@ class VirtualArray extends VirtualObject {
 
     let { patch, target } = this
 
-    target.splice(0, patch[SHIFT], ...patch[UNSHIFT])
-    target.splice(target.length, patch[POP], ...patch[PUSH])
+    // remove shifted elements, add unshifted elements
+    target.splice(
+      0,
+      patch[SHIFT],
+      ...patch[UNSHIFT]
+    )
+    // remove popped elements, add pushed elements
+    target.splice(
+      target.length - patch[POP],
+      patch[POP],
+      ...patch[PUSH]
+    )
 
     delete patch[PUSH]
     delete patch[UNSHIFT]
