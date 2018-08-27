@@ -8,9 +8,21 @@ function replaceSymbols (obj) {
     )
     .map((key) => ({
       key: key.toString(),
-      value: obj[key]
+      value: obj[key] === undefined ? '__undefined' : obj[key]
     }))
-    .sort((a, b) => b.key > a.key ? 1 : -1)
+
+  if (Array.isArray(obj)) {
+    for (let i = 0; i < obj.length; i++) {
+      if (i in obj) continue
+      entries.push({
+        key: String(i),
+        value: '__undefined'
+      })
+    }
+  }
+
+  entries.sort((a, b) => b.key > a.key ? 1 : -1)
+
   let res = Array.isArray(obj) ? [] : {}
   for (let { key, value } of entries) {
     if (value != null && typeof value === 'object') {
