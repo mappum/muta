@@ -2,59 +2,55 @@
 
 const VirtualObject = require('./virtualObject.js')
 const { keyToIndex } = require('./common.js')
-
-const SHIFT = Symbol('shift')
-const POP = Symbol('pop')
-const PUSH = Symbol('push')
-const UNSHIFT = Symbol('unshift')
+const ArrayPatch = require('./arrayPatch.js')
+const infiniteObject = require('./infiniteObject.js')
+const {
+  PUSH,
+  POP,
+  UNSHIFT,
+  SHIFT
+} = ArrayPatch
 
 // VirtualArray represents a wrapper around a target array,
 // allowing virtual mutations including overriding elements,
 // shrinking, and growing. Currently, splicing is not supported
 // so growing and shrinking must happen at the ends (push, unshift, pop, shift).
 class VirtualArray extends VirtualObject {
+  constructor (target, patch = infiniteObject()) {
+    patch = new ArrayPatch(patch)
+    super(target, patch)
+  }
+
   length () {
     let length = this.target.length
-    if (PUSH in this.patch) {
-      length += this.patch[PUSH].length
-    }
-    if (POP in this.patch) {
-      length -= this.patch[POP]
-    }
-    if (UNSHIFT in this.patch) {
-      length += this.patch[UNSHIFT].length
-    }
-    if (SHIFT in this.patch) {
-      length -= this.patch[SHIFT]
-    }
+    length += this.patch[PUSH].length
+    length += this.patch[UNSHIFT].length
+    length -= this.patch[POP]
+    length -= this.patch[SHIFT]
     return length
   }
 
   resolveIndex (index) {
-    if (UNSHIFT in this.patch) {
-      let unshiftLen = this.patch[UNSHIFT].length
-      if (index < unshiftLen) {
-        return { index, array: this.patch[UNSHIFT] }
-      }
-      index -= unshiftLen
-      if (SHIFT in this.patch) {
-        index += this.patch[SHIFT]
-      }
-    }
+    let { patch, target } = this
 
-    let targetLen = this.target.length - notObj(this.patch[POP], 0)
+    let unshiftLen = patch[UNSHIFT].length
+    if (index < unshiftLen) {
+      return { index, array: patch[UNSHIFT] }
+    }
+    index -= unshiftLen
+    index += patch[SHIFT]
+
+    let targetLen = target.length - patch[POP]
     if (index < targetLen) {
-      return { index, array: this.target }
+      return { index, array: target }
     }
 
-    index -= notObj(this.patch[SHIFT], 0)
+    index -= patch[SHIFT]
     index -= targetLen
 
-    if (PUSH in this.patch) {
-      let pushLen = this.patch[PUSH].length
-      if (index < pushLen) {
-        return { index, array: this.patch[PUSH] }
-      }
+    let pushLen = patch[PUSH].length
+    if (index < pushLen) {
+      return { index, array: patch[PUSH] }
     }
   }
 
@@ -186,35 +182,8 @@ class VirtualArray extends VirtualObject {
       throw RangeError('Invalid array length')
     }
 
+    let { patch, target } = this
     let lengthChange = length - this.length()
-    let push = notObj(this.patch[PUSH], [])
-    let unshift = notObj(this.patch[UNSHIFT], [])
-    let pop = notObj(this.patch[POP], 0)
-    let shift = notObj(this.patch[SHIFT], 0)
-
-    let done = () => {
-      if (push.length > 0) {
-        this.patch[PUSH] = push
-      } else {
-        delete this.patch[PUSH]
-      }
-      if (unshift.length > 0) {
-        this.patch[UNSHIFT] = unshift
-      } else {
-        delete this.patch[UNSHIFT]
-      }
-      if (pop > 0) {
-        this.patch[POP] = pop
-      } else {
-        delete this.patch[POP]
-      }
-      if (shift > 0) {
-        this.patch[SHIFT] = shift
-      } else {
-        delete this.patch[SHIFT]
-      }
-      return true
-    }
 
     // noop
     if (lengthChange === 0) {
@@ -224,36 +193,36 @@ class VirtualArray extends VirtualObject {
     // increase length by setting on 'push' values
     // TODO: subtract from pop count if > 0 (and delete index?)
     if (lengthChange > 0) {
-      push.length += lengthChange
-      return done()
+      patch[PUSH].length += lengthChange
+      return true
     }
 
     // decrease length (lengthChange is < 0)
     lengthChange = -lengthChange
 
     // shorten or remove push array
-    if (lengthChange <= push.length) {
-      push.length -= lengthChange
-      return done()
+    if (lengthChange <= patch[PUSH].length) {
+      patch[PUSH].length -= lengthChange
+      return true
     }
-    lengthChange -= push.length
-    push.length = 0
+    lengthChange -= patch[PUSH].length
+    patch[PUSH].length = 0
 
     // shorten target range via pop count
-    let targetSliceLength = this.target.length - pop - shift
+    let targetSliceLength = target.length - patch[POP] - patch[SHIFT]
     if (lengthChange <= targetSliceLength) {
       // target slice is long enough, now we're done
-      pop += lengthChange
-      return done()
+      patch[POP] += lengthChange
+      return true
     } else {
       // pop all of target slice and continue
-      pop += targetSliceLength
+      patch[POP] += targetSliceLength
       lengthChange -= targetSliceLength
     }
 
     // shorten unshift array
-    unshift.length -= lengthChange
-    return done()
+    patch[UNSHIFT].length -= lengthChange
+    return true
   }
 
   iterator () {
@@ -268,18 +237,15 @@ class VirtualArray extends VirtualObject {
   commit () {
     super.commit()
 
-    let push = notObj(this.patch[PUSH], [])
-    let unshift = notObj(this.patch[UNSHIFT], [])
-    let pop = notObj(this.patch[POP], 0)
-    let shift = notObj(this.patch[SHIFT], 0)
+    let { patch, target } = this
 
-    this.target.splice(0, shift, ...unshift)
-    this.target.splice(this.target.length, pop, ...push)
+    target.splice(0, patch[SHIFT], ...patch[UNSHIFT])
+    target.splice(target.length, patch[POP], ...patch[PUSH])
 
-    delete this.patch[PUSH]
-    delete this.patch[UNSHIFT]
-    delete this.patch[POP]
-    delete this.patch[SHIFT]
+    delete patch[PUSH]
+    delete patch[UNSHIFT]
+    delete patch[POP]
+    delete patch[SHIFT]
   }
 }
 
@@ -288,11 +254,13 @@ const methods = {
     let length = this.length()
     if (length === 0) return
 
-    if (PUSH in this.patch && this.patch[PUSH].length > 0) {
-      return this.patch[PUSH].pop()
+    let { patch, target } = this
+
+    if (patch[PUSH].length > 0) {
+      return patch[PUSH].pop()
     }
 
-    let value = this.get(this.target, length - 1)
+    let value = this.get(target, length - 1)
     this.setLength(length - 1)
     return value
   },
@@ -300,37 +268,39 @@ const methods = {
   shift () {
     if (this.length() === 0) return
 
-    if (UNSHIFT in this.patch && this.patch[UNSHIFT].length > 0) {
-      return this.patch[UNSHIFT].shift()
+    let { patch, target } = this
+
+    if (patch[UNSHIFT].length > 0) {
+      return patch[UNSHIFT].shift()
     }
 
-    let value = this.get(this.target, 0)
-    this.patch[SHIFT] = notObj(this.patch[SHIFT], 0) + 1
+    let value = this.get(target, 0)
+    patch[SHIFT] += 1
     return value
   },
 
   unshift (...args) {
     let { patch } = this
-    while (SHIFT in patch && patch[SHIFT] > 0 && args.length > 0) {
+    while (patch[SHIFT] > 0 && args.length > 0) {
       patch[SHIFT] -= 1
       this.set(this.target, 0, args.shift())
     }
     if (args.length > 0) {
-      patch[UNSHIFT] = notObj(patch[UNSHIFT], [])
-      patch[UNSHIFT].unshift(...args)
+      return patch[UNSHIFT].unshift(...args)
     }
+    return this.length()
   },
 
   push (...args) {
-    let { patch } = this
-    while (POP in patch && patch[POP] > 0 && args.length > 0) {
+    let { patch, target } = this
+    while (patch[POP] > 0 && args.length > 0) {
       patch[POP] -= 1
-      this.set(this.target, this.length() - 1, args.shift())
+      this.set(target, this.length() - 1, args.shift())
     }
     if (args.length > 0) {
-      patch[PUSH] = notObj(patch[PUSH], [])
-      patch[PUSH].push(...args)
+      return patch[PUSH].push(...args)
     }
+    return this.length()
   },
 
   splice () {
@@ -339,16 +309,3 @@ const methods = {
 }
 
 module.exports = VirtualArray
-Object.assign(module.exports, {
-  PUSH,
-  POP,
-  UNSHIFT,
-  SHIFT
-})
-
-function notObj (a, b) {
-  if (a && typeof a === 'object' && !Array.isArray(a)) {
-    return b
-  }
-  return a
-}

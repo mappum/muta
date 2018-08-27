@@ -186,7 +186,6 @@ test('fuzz', (t) => {
         mutationLog.push(mutate(wrapper))
       }
       let preCommit = clone(wrapper)
-      let patch = muta.patch(wrapper)
       muta.commit(wrapper)
       t.deepEquals(obj, preCommit)
     }

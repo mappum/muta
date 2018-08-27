@@ -8,7 +8,7 @@ const {
   POP,
   UNSHIFT,
   SHIFT
-} = VirtualArray
+} = require('../src/arrayPatch.js')
 
 test('VirtualArray', (t) => {
   t.test('create root instance', (t) => {
@@ -188,7 +188,8 @@ test('VirtualArray', (t) => {
     wrapper.push(4)
 
     t.equals(wrapper[2], 3.5)
-    t.equals(obj.patch[POP], 0)
+    t.false(POP in obj.patch)
+    console.log(obj.patch)
     t.deepEquals(obj.patch[PUSH], [ 4 ])
 
     t.end()
