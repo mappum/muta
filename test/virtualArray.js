@@ -580,5 +580,26 @@ test('VirtualArray', (t) => {
     t.end()
   })
 
+  t.test('delete and unshift', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    delete wrapper[2]
+    wrapper.unshift(0)
+
+    t.equals(wrapper[0], 0)
+    t.equals(wrapper[1], 1)
+    t.equals(wrapper[2], 2)
+    t.false(3 in wrapper)
+    t.equals(wrapper.length, 4)
+    t.deepEquals(
+      Object.keys(wrapper),
+      [ '0', '1', '2' ]
+    )
+
+    t.end()
+  })
+
   t.end()
 })
