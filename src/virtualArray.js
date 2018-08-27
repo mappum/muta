@@ -125,9 +125,6 @@ class VirtualArray extends VirtualObject {
   }
 
   has (target, key) {
-    let deleted = this.deletes(key)
-    if (deleted) return false
-
     let index = keyToIndex(key)
     if (typeof index !== 'number') {
       return super.has(this.target, key)
@@ -143,12 +140,18 @@ class VirtualArray extends VirtualObject {
   }
 
   getOwnPropertyDescriptor (target, key) {
-    let has = this.has(this.target, key)
-    if (!has) return
+    if (!this.has(target, key)) return
 
     let index = keyToIndex(key)
     if (typeof index !== 'number') {
       return super.getOwnPropertyDescriptor(this.target, key)
+    }
+
+    let res = this.resolveIndex(index)
+    if (res == null) return
+
+    if (res.array === this.target) {
+      return super.getOwnPropertyDescriptor(this.target, res.index)
     }
 
     return {
