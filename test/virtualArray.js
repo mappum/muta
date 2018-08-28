@@ -9,6 +9,7 @@ const {
   UNSHIFT,
   SHIFT
 } = require('../src/arrayPatch.js')
+let { deepEquals } = require('./common.js')
 
 test('VirtualArray', (t) => {
   t.test('create root instance', (t) => {
@@ -665,6 +666,25 @@ test('VirtualArray', (t) => {
     t.false(1 in target)
     t.equals(target.length, 0)
     t.deepEquals(Object.keys(target), [])
+
+    t.end()
+  })
+
+  t.test('mutate virtual child array', (t) => {
+    let target = []
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.push([])
+    wrapper[0].push(0)
+
+    deepEquals(t, obj.patch, {
+      [PUSH]: [ [0] ]
+    })
+
+    obj.commit()
+
+    t.deepEquals(target, [ [0] ])
 
     t.end()
   })
