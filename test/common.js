@@ -1,5 +1,7 @@
 'use strict'
 
+const { inspect } = require('util')
+
 function replaceSymbols (obj) {
   let entries = []
     .concat(
@@ -12,6 +14,7 @@ function replaceSymbols (obj) {
     }))
 
   if (Array.isArray(obj)) {
+    // add deleted entries (as set to undefined)
     for (let i = 0; i < obj.length; i++) {
       if (i in obj) continue
       entries.push({
@@ -36,10 +39,13 @@ function replaceSymbols (obj) {
 // XXX hack to convert symbols to strings, since tape doesn't
 // support symbols in deepEquals
 function deepEquals (t, a, b) {
-  t.equals(
-    JSON.stringify(replaceSymbols(a)),
-    JSON.stringify(replaceSymbols(b))
-  )
+  t.equals(stringify(a), stringify(b))
+}
+
+function stringify (obj) {
+  obj = replaceSymbols(obj)
+  return inspect(obj, { depth: Infinity })
+    .replace(/\s/g, '')
 }
 
 module.exports = { replaceSymbols, deepEquals }
