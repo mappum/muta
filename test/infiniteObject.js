@@ -110,5 +110,27 @@ test('infiniteObject', (t) => {
     t.end()
   })
 
+  t.test('delete property from referenced child', (t) => {
+    let root = infiniteObject()
+    root.foo.bar = 5
+    let foo = root.foo
+    delete foo.bar
+    t.false('foo' in root)
+    t.false('bar' in foo)
+    t.end()
+  })
+
+  t.test('set property on empty referenced child', (t) => {
+    let root = infiniteObject()
+    root.foo.bar = 5
+    let foo = root.foo
+    delete foo.bar
+    foo.bar = 5
+    t.true('foo' in root)
+    t.true('bar' in root.foo)
+    t.equals(root.foo, foo)
+    t.end()
+  })
+
   t.end()
 })
