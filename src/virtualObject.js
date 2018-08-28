@@ -24,10 +24,9 @@ class VirtualObject {
       return this
     }
 
-    // key is assigned to, resolve with virtual value as target
+    // key is assigned to, resolve with virtual value (no need to wrap)
     if (this.assignsTo(key)) {
-      let childPatch = this.patch[ASSIGN][key]
-      return this.wrap(childPatch, childPatch)
+      return this.patch[ASSIGN][key]
     }
 
     // key is deleted
@@ -54,12 +53,6 @@ class VirtualObject {
   }
 
   set (target, key, value) {
-    // if this target is virtual, just assign to it
-    if (target === this.patch) {
-      target[key] = value
-      return true
-    }
-
     // if set back to original value, remove from patch
     if (key in target && target[key] === value) {
       if (this.assignsTo(key)) {
@@ -96,10 +89,6 @@ class VirtualObject {
   }
 
   ownKeys (target) {
-    if (target === this.patch) {
-      return Reflect.ownKeys(target)
-    }
-
     // get target keys
     let keys = getKeys(target)
 
@@ -137,6 +126,15 @@ class VirtualObject {
           configurable: true,
           enumerable: true
         }
+      }
+    }
+
+    if (key in this.patch) {
+      return {
+        value: this.wrap(target[key], this.patch[key]),
+        writable: true,
+        configurable: true,
+        enumerable: true
       }
     }
 
@@ -199,7 +197,7 @@ function wrap (target, patch, wrapper) {
     target = target.bind(wrapper)
   }
 
-  if (target !== patch && Array.isArray(target)) {
+  if (Array.isArray(target)) {
     let VA = require('./virtualArray.js')
     return new VA(target, patch)
   } else {
