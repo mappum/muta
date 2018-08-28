@@ -2,14 +2,14 @@
 
 const VirtualObject = require('./virtualObject.js')
 const { keyToIndex } = require('./common.js')
-const ArrayPatch = require('./arrayPatch.js')
+const arrayPatch = require('./arrayPatch.js')
 const infiniteObject = require('./infiniteObject.js')
 const {
   PUSH,
   POP,
   UNSHIFT,
   SHIFT
-} = ArrayPatch
+} = arrayPatch
 
 // VirtualArray represents a wrapper around a target array,
 // allowing virtual mutations including overriding elements,
@@ -17,7 +17,7 @@ const {
 // so growing and shrinking must happen at the ends (push, unshift, pop, shift).
 class VirtualArray extends VirtualObject {
   constructor (target, patch = infiniteObject()) {
-    patch = new ArrayPatch(patch)
+    patch = arrayPatch(patch)
     super(target, patch)
   }
 

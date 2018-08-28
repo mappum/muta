@@ -5,34 +5,32 @@ const POP = Symbol('pop')
 const PUSH = Symbol('push')
 const UNSHIFT = Symbol('unshift')
 
-class ArrayPatch {
-  constructor (state) {
-    return new Proxy(state, this)
+function arrayPatch (state) {
+  return new Proxy(state, { get, set })
+}
+
+function get (target, key) {
+  if (key in target) {
+    return target[key]
   }
 
-  get (target, key) {
-    if (key in target) {
-      return target[key]
-    }
-
-    if (isGrowOp(key)) {
-      return ghostArray(target, key)
-    }
-
-    if (isShrinkOp(key)) {
-      return 0
-    }
-
-    return Reflect.get(target, key)
+  if (isGrowOp(key)) {
+    return ghostArray(target, key)
   }
 
-  set (target, key, value) {
-    if (isShrinkOp(key) && value === 0) {
-      delete target[key]
-      return true
-    }
-    return Reflect.set(target, key, value)
+  if (isShrinkOp(key)) {
+    return 0
   }
+
+  return Reflect.get(target, key)
+}
+
+function set (target, key, value) {
+  if (isShrinkOp(key) && value === 0) {
+    delete target[key]
+    return true
+  }
+  return Reflect.set(target, key, value)
 }
 
 function isShrinkOp (key) {
@@ -58,7 +56,7 @@ function ghostArray (parent, parentKey) {
   return array
 }
 
-module.exports = ArrayPatch
+module.exports = arrayPatch
 Object.assign(module.exports, {
   PUSH,
   POP,
