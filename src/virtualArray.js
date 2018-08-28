@@ -269,8 +269,9 @@ const methods = {
 
     let { patch, target } = this
 
-    if (patch[PUSH].length > 0) {
-      return patch[PUSH].pop()
+    let res = this.resolveIndex(length - 1)
+    if (res.array !== target) {
+      return res.array.pop()
     }
 
     let value = this.get(target, length - 1)
@@ -283,8 +284,9 @@ const methods = {
 
     let { patch, target } = this
 
-    if (patch[UNSHIFT].length > 0) {
-      return patch[UNSHIFT].shift()
+    let res = this.resolveIndex(0)
+    if (res.array !== target) {
+      return res.array.shift()
     }
 
     let value = this.get(target, 0)
