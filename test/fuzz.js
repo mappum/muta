@@ -157,7 +157,7 @@ function clone (obj) {
 
 test('fuzz', (t) => {
   t.test('unmutated wrapper = target', (t) => {
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 1000; i++) {
       let obj = values.object()
       let wrapper = muta(obj)
       deepEquals(t, obj, wrapper)
