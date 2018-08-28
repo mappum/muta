@@ -77,7 +77,7 @@ class VirtualArray extends VirtualObject {
       return super.get(this.target, res.index)
     }
 
-    return super.wrap(res.array[res.index], this.patch[key])
+    return res.array[res.index]
   }
 
   set (target, key, value) {
@@ -267,7 +267,7 @@ const methods = {
     let length = this.length()
     if (length === 0) return
 
-    let { patch, target } = this
+    let { target } = this
 
     let res = this.resolveIndex(length - 1)
     if (res.array !== target) {
