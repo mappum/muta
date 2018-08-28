@@ -191,7 +191,6 @@ test('VirtualArray', (t) => {
 
     t.equals(wrapper[2], 3.5)
     t.false(POP in obj.patch)
-    console.log(obj.patch)
     t.deepEquals(obj.patch[PUSH], [ 4 ])
 
     t.end()
