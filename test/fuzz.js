@@ -126,11 +126,18 @@ const mutate = (obj) => {
 
 function clone (obj) {
   let cloned = {}
+  let keys = Object.keys(obj)
+
   if (Array.isArray(obj)) {
     cloned = []
+    // add deleted properties to keys list
+    for (let i = 0; i < obj.length; i++) {
+      if (!(i in obj)) keys.push(i)
+    }
   }
 
-  let keys = Object.keys(obj).sort()
+  keys.sort()
+
   for (let key of keys) {
     let value = obj[key]
     if (value && typeof value === 'object') {
@@ -157,13 +164,13 @@ test('fuzz', (t) => {
       let obj = values.object()
       let cloned = clone(obj)
       let wrapper = muta(obj)
-      t.deepEquals(wrapper, cloned)
+      deepEquals(t, wrapper, cloned)
       for (let i = 0; i < 20; i++) {
         let mutate = randomMutation()
 
         // reuse same randomness for both mutations
         let random = Math.random
-        let values = new Array(1000).fill(0).map(random)
+        let values = new Array(2000).fill(0).map(random)
         let j = 0
         Math.random = () => values[j++]
 
