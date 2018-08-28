@@ -100,7 +100,13 @@ const values = {
 }
 
 function selectKey (target) {
-  let keys = Object.keys(target).sort()
+  let keys = Object.keys(target)
+  if (Array.isArray(target)) {
+    for (let i = 0; i < target.length; i++) {
+      if (!(i in target)) keys.push(String(i))
+    }
+  }
+  keys.sort()
   let index = Math.random() * keys.length | 0
   return keys[index]
 }
@@ -160,12 +166,12 @@ test('fuzz', (t) => {
   })
 
   t.test('wrapper mutation result = normal object mutation result', (t) => {
-    for (let i = 0; i < 200; i++) {
+    for (let i = 0; i < 4000; i++) {
       let obj = values.object()
       let cloned = clone(obj)
       let wrapper = muta(obj)
       deepEquals(t, wrapper, cloned)
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 5; i++) {
         let mutate = randomMutation()
 
         // reuse same randomness for both mutations
