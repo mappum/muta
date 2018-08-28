@@ -9,6 +9,7 @@ const {
   UNSHIFT,
   SHIFT
 } = require('../src/arrayPatch.js')
+const { ASSIGN } = VirtualObject
 let { deepEquals } = require('./common.js')
 
 test('VirtualArray', (t) => {
@@ -685,6 +686,29 @@ test('VirtualArray', (t) => {
     obj.commit()
 
     t.deepEquals(target, [ [0] ])
+
+    t.end()
+  })
+
+  t.test('shift then unshift child', (t) => {
+    let target = { foo: [1, 2, 3] }
+    let obj = new VirtualObject(target)
+    let wrapper = obj.wrapper
+
+    wrapper.foo.shift()
+    wrapper.foo.unshift(0)
+
+    t.deepEquals(wrapper, { foo: [ 0, 2, 3 ] })
+
+    deepEquals(t, obj.patch, {
+      foo: {
+        [ASSIGN]: { '0': 0 }
+      }
+    })
+
+    obj.commit()
+
+    t.deepEquals(target, { foo: [ 0, 2, 3 ] })
 
     t.end()
   })
