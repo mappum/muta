@@ -45,7 +45,6 @@ class VirtualArray extends VirtualObject {
       return { index, array: target }
     }
 
-    index -= patch[SHIFT]
     index -= targetLen
 
     let pushLen = patch[PUSH].length
