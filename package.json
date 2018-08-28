@@ -8,7 +8,7 @@
   },
   "scripts": {
     "pretest": "depcheck --ignores=babel-preset-es2015,airtap && standard src/*.js test/*.js",
-    "test": "npm run pretest && nyc -r text -r html tape test/*.js | faucet && nyc report",
+    "test": "npm run pretest && nyc -r text -r html tape test/*.js | tap-min && nyc report",
     "test-browser": "npm run pretest && test/browser.sh"
   },
   "keywords": [
@@ -22,9 +22,9 @@
   "devDependencies": {
     "airtap": "^0.1.0",
     "depcheck": "^0.6.9",
-    "faucet": "0.0.1",
     "nyc": "^12.0.2",
     "standard": "^11.0.1",
+    "tap-min": "^1.2.2",
     "tape": "^4.9.1"
   },
   "directories": {
