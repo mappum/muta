@@ -45,7 +45,6 @@ function infiniteObject (parent, selfKey) {
       nKeys -= 1
       if (parent != null && nKeys === 0) {
         delete parent[selfKey]
-        return true
       }
 
       delete target[key]
