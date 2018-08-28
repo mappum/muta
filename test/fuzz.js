@@ -157,7 +157,7 @@ function clone (obj) {
 
 test('fuzz', (t) => {
   t.test('unmutated wrapper = target', (t) => {
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 100; i++) {
       let obj = values.object()
       let wrapper = muta(obj)
       deepEquals(t, obj, wrapper)
@@ -166,7 +166,7 @@ test('fuzz', (t) => {
   })
 
   t.test('wrapper mutation result = normal object mutation result', (t) => {
-    for (let i = 0; i < 4000; i++) {
+    for (let i = 0; i < 1000; i++) {
       let obj = values.object()
       let cloned = clone(obj)
       let wrapper = muta(obj)
@@ -192,7 +192,7 @@ test('fuzz', (t) => {
   })
 
   t.test('pre-commit wrapper = post-commit target', (t) => {
-    for (let i = 0; i < 4000; i++) {
+    for (let i = 0; i < 1000; i++) {
       let obj = values.object()
       let wrapper = muta(obj)
       for (let i = 0; i < 5; i++) {
