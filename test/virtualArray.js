@@ -601,5 +601,25 @@ test('VirtualArray', (t) => {
     t.end()
   })
 
+  t.test('push and shift', (t) => {
+    let target = [1, 2, 3]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.push(4)
+    wrapper.shift()
+
+    t.equals(wrapper[0], 2)
+    t.equals(wrapper[1], 3)
+    t.equals(wrapper[2], 4)
+    t.equals(wrapper.length, 3)
+    t.deepEquals(
+      Object.keys(wrapper),
+      [ '0', '1', '2' ]
+    )
+
+    t.end()
+  })
+
   t.end()
 })
