@@ -621,5 +621,53 @@ test('VirtualArray', (t) => {
     t.end()
   })
 
+  t.test('shift from pushed', (t) => {
+    let target = [1]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.push(2)
+    wrapper.shift()
+    wrapper.shift()
+
+    t.false(0 in wrapper)
+    t.false(1 in wrapper)
+    t.equals(wrapper.length, 0)
+    t.deepEquals(Object.keys(wrapper), [])
+
+    obj.commit()
+
+    t.false(0 in target)
+    t.false(1 in target)
+    t.equals(target.length, 0)
+    t.deepEquals(Object.keys(target), [])
+
+    t.end()
+  })
+
+  t.test('pop from unshifted', (t) => {
+    let target = [2]
+    let obj = new VirtualArray(target)
+    let wrapper = obj.wrapper
+
+    wrapper.unshift(1)
+    wrapper.pop()
+    wrapper.pop()
+
+    t.false(0 in wrapper)
+    t.false(1 in wrapper)
+    t.equals(wrapper.length, 0)
+    t.deepEquals(Object.keys(wrapper), [])
+
+    obj.commit()
+
+    t.false(0 in target)
+    t.false(1 in target)
+    t.equals(target.length, 0)
+    t.deepEquals(Object.keys(target), [])
+
+    t.end()
+  })
+
   t.end()
 })
