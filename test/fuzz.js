@@ -54,6 +54,12 @@ const arrayMutations = {
   }
 }
 
+let arrayAndObjectMutations = Object.assign(
+  {},
+  mutations,
+  arrayMutations
+)
+
 const keys = {
   property () {
     return Math.random().toString(36).slice(2)
@@ -119,10 +125,7 @@ function random (obj) {
 const randomKey = () => random(keys)()
 const randomValue = () => random(values)()
 const randomMutation = () => random(mutations)
-const randomArrayMutation = () => {
-  let muts = { ...mutations, ...arrayMutations }
-  return random(muts)
-}
+const randomArrayMutation = () => random(arrayAndObjectMutations)
 const mutate = (obj) => {
   if (Array.isArray(obj)) {
     return randomArrayMutation()(obj)
