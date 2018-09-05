@@ -8,7 +8,7 @@
   },
   "scripts": {
     "pretest": "depcheck --ignores=babel-preset-es2015,airtap && standard src/*.js test/*.js",
-    "test": "npm run pretest && nyc -r text -r html tape test/*.js | tap-min && nyc report",
+    "test": "nyc -r text -r html tape test/*.js | tap-min && nyc report",
     "test-browser": "npm run pretest && test/browser.sh"
   },
   "keywords": [
