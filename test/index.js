@@ -4,12 +4,21 @@ const test = require('tape')
 const muta = require('..')
 const { deepEquals } = require('./common.js')
 
-test('entry point', (t) => {
+test('wrap object', (t) => {
   let original = { foo: 5 }
   let wrapper = muta(original)
   wrapper.foo += 1
   t.equals(wrapper.foo, 6)
   t.equals(original.foo, 5)
+  t.end()
+})
+
+test('wrap array', (t) => {
+  let original = [ 1, 2 ]
+  let wrapper = muta(original)
+  wrapper.push(3)
+  t.equals(wrapper[2], 3)
+  t.equals(original[2], undefined)
   t.end()
 })
 
@@ -22,11 +31,11 @@ test('commit', (t) => {
   t.end()
 })
 
-test('patch', (t) => {
+test('getPatch', (t) => {
   let original = { foo: 5 }
   let wrapper = muta(original)
   wrapper.foo += 1
-  let patch = muta.patch(wrapper)
+  let patch = muta.getPatch(wrapper)
   deepEquals(t, patch, {
     'Symbol(assign)': { foo: 6 }
   })
@@ -43,9 +52,9 @@ test('commit called on non-wrapper', (t) => {
   t.end()
 })
 
-test('patch called on non-wrapper', (t) => {
+test('getPatch called on non-wrapper', (t) => {
   try {
-    muta.patch({})
+    muta.getPatch({})
     t.fail()
   } catch (err) {
     t.equals(err.message, 'Argument must be a muta wrapped object')
