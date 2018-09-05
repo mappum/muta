@@ -1,6 +1,6 @@
 {
   "name": "muta",
-  "version": "0.2.7",
+  "version": "0.3.0",
   "description": "Transactions for object mutations",
   "main": "index.js",
   "engines": {
