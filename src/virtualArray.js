@@ -147,7 +147,6 @@ class VirtualArray extends VirtualObject {
     }
 
     let res = this.resolveIndex(index)
-    if (res == null) return
 
     if (res.array === this.target) {
       return super.getOwnPropertyDescriptor(this.target, res.index)
