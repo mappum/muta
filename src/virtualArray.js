@@ -323,3 +323,9 @@ const methods = {
 }
 
 module.exports = VirtualArray
+Object.assign(VirtualArray, {
+  PUSH,
+  POP,
+  UNSHIFT,
+  SHIFT
+})
