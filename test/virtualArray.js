@@ -514,16 +514,23 @@ test('VirtualArray', (t) => {
     t.end()
   })
 
-  t.test('splice errors', (t) => {
+  t.test('splice', (t) => {
     let target = [1, 2, 3]
     let obj = new VirtualArray(target)
     let wrapper = obj.wrapper
 
+    // at beginning
+    wrapper.splice(0, 1, 1.1)
+
+    // at end
+    wrapper.splice(2, 1, 3.1)
+
+    // in middle
     try {
-      wrapper.splice(0, 1)
+      wrapper.splice(1, 1)
       t.fail()
     } catch (err) {
-      t.equals(err.message, 'splice not supported by VirtualArray')
+      t.equals(err.message, 'VirtualArray currently only supports slicing at the end of the array')
     }
 
     t.end()
