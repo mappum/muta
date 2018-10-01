@@ -61,3 +61,15 @@ test('getPatch called on non-wrapper', (t) => {
   }
   t.end()
 })
+
+test('access buffer property', (t) => {
+  let obj = muta({ foo: Buffer.from([ 1, 2, 3 ]) })
+  t.equals(obj.foo.toString('hex'), '010203')
+  t.end()
+})
+
+test('access buffer element', (t) => {
+  let arr = muta([ Buffer.from([ 1, 2, 3 ]) ])
+  t.equals(arr[0].toString('hex'), '010203')
+  t.end()
+})
