@@ -712,5 +712,49 @@ test('VirtualArray', (t) => {
     t.end()
   })
 
+  t.test('shift then unshift multiple', (t) => {
+    let target = [1, 2, 3]
+    let arr = new VirtualArray(target)
+    let wrapper = arr.wrapper
+
+    wrapper.shift()
+    wrapper.unshift(0, 0.9)
+
+    t.deepEquals(wrapper, [ 0, 0.9, 2, 3 ])
+
+    deepEquals(t, arr.patch, {
+      [ASSIGN]: { '0': 0.9 },
+      [UNSHIFT]: [ 0 ]
+    })
+
+    arr.commit()
+
+    t.deepEquals(target, [ 0, 0.9, 2, 3 ])
+
+    t.end()
+  })
+
+  t.test('pop then push multiple', (t) => {
+    let target = [1, 2, 3]
+    let arr = new VirtualArray(target)
+    let wrapper = arr.wrapper
+
+    wrapper.pop()
+    wrapper.push(3.1, 4)
+
+    t.deepEquals(wrapper, [ 1, 2, 3.1, 4 ])
+
+    deepEquals(t, arr.patch, {
+      [ASSIGN]: { '2': 3.1 },
+      [PUSH]: [ 4 ]
+    })
+
+    arr.commit()
+
+    t.deepEquals(target, [ 1, 2, 3.1, 4 ])
+
+    t.end()
+  })
+
   t.end()
 })
