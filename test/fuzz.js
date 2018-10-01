@@ -51,6 +51,18 @@ const arrayMutations = {
   pop (target) {
     target.pop()
     return 'pop'
+  },
+  spliceStart (target) {
+    let removeCount = Math.random() * 2 | 0
+    let insert = new Array(Math.random() * 3 | 0 + 1)
+    target.splice(0, removeCount, ...insert)
+    return `splice (0, ${removeCount}, ${insert.join(', ')})`
+  },
+  spliceEnd (target) {
+    let removeCount = Math.random() * 2 | 0
+    let insert = new Array(Math.random() * 3 | 0 + 1)
+    target.splice(target.length - removeCount, removeCount, ...insert)
+    return `splice (${target.length - removeCount}, ${removeCount}, ${insert.join(', ')})`
   }
 }
 
