@@ -297,7 +297,7 @@ const methods = {
     let { patch } = this
     while (patch[SHIFT] > 0 && args.length > 0) {
       patch[SHIFT] -= 1
-      this.set(this.target, 0, args.shift())
+      this.set(this.target, 0, args.pop())
     }
     if (args.length > 0) {
       return patch[UNSHIFT].unshift(...args)
