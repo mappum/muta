@@ -192,9 +192,10 @@ Object.assign(module.exports, {
 
 function wrap (target, patch, wrapper) {
   if (typeof target === 'function') {
-    // TODO: do this in a better way,
-    // this prevents consumers from re-brinding the function
-    target = target.bind(wrapper)
+    let original = target
+    target = (...args) => {
+      return original.call(wrapper, ...args)
+    }
   }
 
   if (Array.isArray(target)) {
@@ -207,6 +208,8 @@ function wrap (target, patch, wrapper) {
 
 function isWrappable (value) {
   if (value == null) return false
+  // XXX: don't wrap Buffers, since it causes issues with native Buffer methods
+  if (Buffer.isBuffer(value)) return false
   return typeof value === 'object' ||
     typeof value === 'function'
 }
