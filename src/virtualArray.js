@@ -317,8 +317,30 @@ const methods = {
     return this.length()
   },
 
-  splice () {
-    throw Error('splice not supported by VirtualArray')
+  splice (index, removeCount, ...insert) {
+    // equivalent to SHIFT/UNSHIFT
+    if (index === 0) {
+      let removed = this.wrapper.slice(0, removeCount)
+      // TODO: do this in way less operations by possibly consuming range of UNSHIFT
+      for (let i = 0; i < removeCount; i++) {
+        this.wrapper.shift()
+      }
+      this.wrapper.unshift(...insert)
+      return removed
+    }
+
+    // equivalent to POP/PUSH
+    if (index === this.length() - removeCount) {
+      let removed = this.wrapper.slice(this.length() - removeCount)
+      // TODO: do this in way less operations by possibly consuming range of POP
+      for (let i = 0; i < removeCount; i++) {
+        this.wrapper.pop()
+      }
+      this.wrapper.push(...insert)
+      return removed
+    }
+
+    throw Error('VirtualArray currently only supports slicing at the end of the array')
   }
 }
 
