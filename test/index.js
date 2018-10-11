@@ -55,6 +55,15 @@ test('isMuta', (t) => {
   t.end()
 })
 
+test('wasMutated', (t) => {
+  let original = { foo: { bar: 5 } }
+  let wrapper = muta(original)
+  t.false(muta.wasMutated(wrapper))
+  wrapper.foo.bar += 1
+  t.true(muta.wasMutated(wrapper))
+  t.end()
+})
+
 test('commit called on non-wrapper', (t) => {
   try {
     muta.commit({})
