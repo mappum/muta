@@ -42,6 +42,19 @@ test('getPatch', (t) => {
   t.end()
 })
 
+test('isMuta', (t) => {
+  let original = { foo: { bar: 5 } }
+  let wrapper = muta(original)
+  t.true(muta.isMuta(wrapper))
+  t.true(muta.isMuta(wrapper.foo))
+  t.false(muta.isMuta(wrapper.foo.bar))
+  t.false(muta.isMuta(original))
+  t.false(muta.isMuta(original.foo))
+  t.false(muta.isMuta(original.foo.bar))
+  t.false(muta.isMuta(null))
+  t.end()
+})
+
 test('commit called on non-wrapper', (t) => {
   try {
     muta.commit({})
