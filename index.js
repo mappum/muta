@@ -29,6 +29,14 @@ function patch (wrapper) {
   return patch.patch
 }
 
+module.exports.isMuta =
+function isMuta (wrapper) {
+  if (wrapper == null || typeof wrapper !== 'object') {
+    return false
+  }
+  return wrapper[VirtualObject.PATCH] != null
+}
+
 Object.assign(module.exports, {
   ASSIGN,
   DELETE,
