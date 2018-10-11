@@ -39,7 +39,14 @@ function replaceSymbols (obj) {
 // XXX hack to convert symbols to strings, since tape doesn't
 // support symbols in deepEquals
 function deepEquals (t, a, b) {
-  t.equals(stringify(a), stringify(b))
+  let strA = stringify(a)
+  let strB = stringify(b)
+  if (strA !== strB) {
+    console.log(strA)
+    console.log(strB)
+    process.exit(1)
+  }
+  t.equals(strA, strB)
 }
 
 function stringify (obj) {

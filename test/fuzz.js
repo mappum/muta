@@ -28,6 +28,22 @@ const mutations = {
     let key = Math.random() < 0.9 ? selectKey(target) : randomKey()
     delete target[key]
     return `delete obj[${JSON.stringify(key)}]`
+  },
+  mutaWrap (target) {
+    let key = selectKey(target)
+    if (Math.random() < 0.05 && target[key] != null && typeof target[key] === 'object') {
+      target[key] = muta(target[key])
+      return `muta wrap(${key})`
+    }
+    return 'noop'
+  },
+  mutaCommit (target) {
+    let key = selectKey(target)
+    if (muta.isMuta(target[key]) && Math.random() < 0.1) {
+      muta.commit(target[key])
+      return `muta commit(${key})`
+    }
+    return 'noop'
   }
 }
 
@@ -135,19 +151,10 @@ function random (obj) {
 }
 
 const randomKey = () => random(keys)()
-const randomValue = () => {
-  if (Math.random() < 0.06) {
-    return muta(Math.random() < 0.5 ? values.object() : values.array())
-  }
-  return random(values)()
-}
+const randomValue = () => random(values)()
 const randomMutation = () => random(mutations)
 const randomArrayMutation = () => random(arrayAndObjectMutations)
 const mutate = (obj) => {
-  if (muta.isMuta(obj) && Math.random() < 0.05) {
-    muta.commit(obj)
-    console.log('commit')
-  }
   if (Array.isArray(obj)) {
     return randomArrayMutation()(obj)
   }
@@ -181,7 +188,7 @@ function clone (obj) {
 
 test('fuzz', (t) => {
   t.test('unmutated wrapper = target', (t) => {
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 1000; i++) {
       let obj = values.object()
       let wrapper = muta(obj)
       deepEquals(t, obj, wrapper)
@@ -200,7 +207,7 @@ test('fuzz', (t) => {
 
         // reuse same randomness for both mutations
         let random = Math.random
-        let values = new Array(3000).fill(0).map(random)
+        let values = new Array(5000).fill(0).map(random)
         let j = 0
         Math.random = () => values[j++]
 
