@@ -135,10 +135,19 @@ function random (obj) {
 }
 
 const randomKey = () => random(keys)()
-const randomValue = () => random(values)()
+const randomValue = () => {
+  if (Math.random() < 0.06) {
+    return muta(Math.random() < 0.5 ? values.object() : values.array())
+  }
+  return random(values)()
+}
 const randomMutation = () => random(mutations)
 const randomArrayMutation = () => random(arrayAndObjectMutations)
 const mutate = (obj) => {
+  if (muta.isMuta(obj) && Math.random() < 0.05) {
+    muta.commit(obj)
+    console.log('commit')
+  }
   if (Array.isArray(obj)) {
     return randomArrayMutation()(obj)
   }
@@ -191,7 +200,7 @@ test('fuzz', (t) => {
 
         // reuse same randomness for both mutations
         let random = Math.random
-        let values = new Array(2000).fill(0).map(random)
+        let values = new Array(3000).fill(0).map(random)
         let j = 0
         Math.random = () => values[j++]
 
