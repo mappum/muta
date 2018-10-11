@@ -4,6 +4,7 @@ const VirtualObject = require('./src/virtualObject.js')
 const { ASSIGN, DELETE } = VirtualObject
 const VirtualArray = require('./src/virtualArray.js')
 const { PUSH, POP, SHIFT, UNSHIFT } = VirtualArray
+const { getKeys } = require('./src/common.js')
 
 module.exports =
 function muta (target) {
@@ -35,6 +36,11 @@ function isMuta (wrapper) {
     return false
   }
   return wrapper[VirtualObject.PATCH] != null
+}
+
+module.exports.wasMutated =
+function wasMutated (wrapper) {
+  return getKeys(unwrap(wrapper).patch).length > 0
 }
 
 Object.assign(module.exports, {

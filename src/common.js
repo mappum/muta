@@ -10,4 +10,11 @@ function keyToIndex (key) {
   return key
 }
 
-module.exports = { keyToIndex }
+function getKeys (object) {
+  return [].concat(
+    Object.getOwnPropertyNames(object),
+    Object.getOwnPropertySymbols(object)
+  )
+}
+
+module.exports = { keyToIndex, getKeys }

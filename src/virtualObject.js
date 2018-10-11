@@ -1,6 +1,7 @@
 'use strict'
 
 const infiniteObject = require('./infiniteObject.js')
+const { getKeys } = require('./common.js')
 
 const ASSIGN = Symbol('assign')
 const DELETE = Symbol('delete')
@@ -212,11 +213,4 @@ function isWrappable (value) {
   if (Buffer.isBuffer(value)) return false
   return typeof value === 'object' ||
     typeof value === 'function'
-}
-
-function getKeys (object) {
-  return [].concat(
-    Object.getOwnPropertyNames(object),
-    Object.getOwnPropertySymbols(object)
-  )
 }
