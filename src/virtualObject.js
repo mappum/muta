@@ -1,7 +1,6 @@
 'use strict'
 
 const infiniteObject = require('./infiniteObject.js')
-const { getKeys } = require('./common.js')
 
 const ASSIGN = Symbol('assign')
 const DELETE = Symbol('delete')
@@ -17,6 +16,7 @@ class VirtualObject {
     this.target = target
     this.patch = patch
     this.wrapper = new Proxy(this.target, this)
+    this.cachedPropertyDescriptor = { key: null, descriptor: null }
   }
 
   get (target, key) {
@@ -113,25 +113,34 @@ class VirtualObject {
   }
 
   getOwnPropertyDescriptor (target, key) {
-    if (DELETE in this.patch) {
-      if (key in this.patch[DELETE]) {
-        return undefined
-      }
+    if (key === this.cachedPropertyDescriptor.key) {
+      return this.cachedPropertyDescriptor.descriptor
     }
 
-    if (ASSIGN in this.patch) {
+    this.cachedPropertyDescriptor.key = key
+
+    let descriptor
+
+    if (DELETE in this.patch) {
+      if (key in this.patch[DELETE]) {
+        descriptor = {
+          value: undefined,
+          writable: true,
+          configurable: true,
+          enumerable: true
+        }
+      }
+    } else if (ASSIGN in this.patch) {
       if (key in this.patch[ASSIGN]) {
-        return {
+        descriptor = {
           value: this.patch[ASSIGN][key],
           writable: true,
           configurable: true,
           enumerable: true
         }
       }
-    }
-
-    if (key in this.patch) {
-      return {
+    } else if (key in this.patch) {
+      descriptor = {
         value: this.wrap(target[key], this.patch[key]),
         writable: true,
         configurable: true,
@@ -139,7 +148,11 @@ class VirtualObject {
       }
     }
 
-    return Reflect.getOwnPropertyDescriptor(target, key)
+    if (descriptor != null) {
+      this.cachedPropertyDescriptor.key = descriptor
+    }
+
+    return descriptor
   }
 
   assignsTo (key) {
@@ -213,4 +226,11 @@ function isWrappable (value) {
   if (Buffer.isBuffer(value)) return false
   return typeof value === 'object' ||
     typeof value === 'function'
+}
+
+function getKeys (object) {
+  return [].concat(
+    Object.getOwnPropertyNames(object),
+    Object.getOwnPropertySymbols(object)
+  )
 }

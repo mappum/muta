@@ -139,7 +139,22 @@ class VirtualArray extends VirtualObject {
   }
 
   getOwnPropertyDescriptor (target, key) {
-    if (!this.has(target, key)) return
+    if (key === this.cachedPropertyDescriptor.key) {
+      return this.cachedPropertyDescriptor.descriptor
+    }
+
+    // TODO: remove this when VirtualObject properly handles writable/enumerable/configurable
+    if (key === 'length') {
+      let descriptor = {
+        value: this.length(),
+        writable: true,
+        enumerable: false,
+        configurable: false
+      }
+      this.cachedPropertyDescriptor.key = 'length'
+      this.cachedPropertyDescriptor.descriptor = descriptor
+      return descriptor
+    }
 
     let index = keyToIndex(key)
     if (typeof index !== 'number') {
@@ -148,15 +163,8 @@ class VirtualArray extends VirtualObject {
 
     let res = this.resolveIndex(index)
 
-    if (res.array === this.target) {
+    if (res && res.array === this.target) {
       return super.getOwnPropertyDescriptor(this.target, res.index)
-    }
-
-    return {
-      value: this.get(this.target, key),
-      writable: true,
-      enumerable: true,
-      configurable: true
     }
   }
 
