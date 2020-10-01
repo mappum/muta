@@ -114,45 +114,47 @@ class VirtualObject {
 
   getOwnPropertyDescriptor (target, key) {
     if (key === this.cachedPropertyDescriptor.key) {
+      console.log(this.cachedPropertyDescriptor)
       return this.cachedPropertyDescriptor.descriptor
     }
 
-    this.cachedPropertyDescriptor.key = key
-
-    let descriptor
-
     if (DELETE in this.patch) {
       if (key in this.patch[DELETE]) {
-        descriptor = {
+        let descriptor = {
           value: undefined,
           writable: true,
           configurable: true,
           enumerable: true
         }
+        this.cachedPropertyDescriptor.key = key
+        this.cachedPropertyDescriptor.descriptor = descriptor
+        return descriptor
       }
-    } else if (ASSIGN in this.patch) {
+    }
+    if (ASSIGN in this.patch) {
       if (key in this.patch[ASSIGN]) {
-        descriptor = {
+        let descriptor = {
           value: this.patch[ASSIGN][key],
           writable: true,
           configurable: true,
           enumerable: true
         }
+        this.cachedPropertyDescriptor.key = key
+        this.cachedPropertyDescriptor.descriptor = descriptor
+        return descriptor
       }
-    } else if (key in this.patch) {
-      descriptor = {
+    }
+    if (key in this.patch) {
+      let descriptor = {
         value: this.wrap(target[key], this.patch[key]),
         writable: true,
         configurable: true,
         enumerable: true
       }
+      this.cachedPropertyDescriptor.key = key
+      this.cachedPropertyDescriptor.descriptor = descriptor
+      return descriptor
     }
-
-    if (descriptor != null) {
-      this.cachedPropertyDescriptor.key = descriptor
-    }
-
-    return descriptor
   }
 
   assignsTo (key) {
