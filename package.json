@@ -20,7 +20,7 @@
   "author": "Matt Bell <mappum@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "airtap": "^0.1.0",
+    "airtap": "^4.0.4",
     "depcheck": "^0.6.9",
     "nyc": "^12.0.2",
     "standard": "^11.0.1",
